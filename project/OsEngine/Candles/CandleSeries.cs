@@ -243,6 +243,14 @@ namespace OsEngine.Entity
                 {
                     continue;
                 }
+
+                // ====== ФИЛЬТРАЦИЯ ВЫХОДНЫХ ======
+                if (_skipWeekends && IsWeekend(trades[i].Time))
+                {
+                    continue; // Пропускаем тики в выходные
+                }
+                // =================================
+
                 UpDateCandle(trades[i].Time, trades[i].Price, trades[i].Volume, false, trades[i].Side);
 
                 List<Trade> tradesInCandle = CandlesAll[CandlesAll.Count - 1].Trades;
@@ -367,7 +375,22 @@ namespace OsEngine.Entity
                 UpdateFinishCandle();
             }
         }
+        // Добавим свойство для включения фильтрации выходных
+        private bool _skipWeekends = true;
+        public bool SkipWeekends
+        {
+            get { return _skipWeekends; }
+            set { _skipWeekends = value; }
+        }
 
+        // Метод проверки, является ли время выходным
+        private bool IsWeekend(DateTime time)
+        {
+            return time.DayOfWeek == DayOfWeek.Saturday ||
+                   time.DayOfWeek == DayOfWeek.Sunday;
+        }
+
+        // Модифицируем метод SetNewTicks()
         public void SetNewTicks(Trade trade)
         {
             if (_isStoped || _isStarted == false)
@@ -392,58 +415,18 @@ namespace OsEngine.Entity
                 return;
             }
 
-            if (trade == null)
+            // ====== ВАЖНОЕ ИЗМЕНЕНИЕ: ФИЛЬТРАЦИЯ ВЫХОДНЫХ ======
+            if (_skipWeekends && IsWeekend(trade.Time))
             {
-                return;
+                return; // Пропускаем тики в выходные
             }
+            // ==================================================
 
             if (CandlesAll != null &&
                 CandlesAll.Count > 0 &&
                 CandlesAll[CandlesAll.Count - 1].TimeStart > trade.Time)
             {
                 return;
-            }
-
-            if (TimeFrameBuilder.CandleCreateMethodType == "Simple")
-            { // при классической сборке свечек. Когда мы точно знаем когда у свечи закрытие
-                bool saveInNextCandle = true;
-
-                if (CandlesAll != null &&
-                    CandlesAll.Count > 0 &&
-                    TimeFrameBuilder.SaveTradesInCandles &&
-                    CandlesAll[CandlesAll.Count - 1].TimeStart.Add(TimeFrameSpan) > trade.Time)
-                {
-                    CandlesAll[CandlesAll.Count - 1].Trades.Add(trade);
-                    saveInNextCandle = false;
-                }
-
-                UpDateCandle(trade.Time, trade.Price, trade.Volume, true, trade.Side);
-
-                if (TimeFrameBuilder.SaveTradesInCandles
-                    && saveInNextCandle)
-                {
-                    CandlesAll[CandlesAll.Count - 1].Trades.Add(trade);
-                }
-
-                if (trade.OpenInterest != 0)
-                {
-                    CandlesAll[CandlesAll.Count - 1].OpenInterest = trade.OpenInterest;
-                }
-            }
-            else
-            { // при любым другом виде свечек
-
-                UpDateCandle(trade.Time, trade.Price, trade.Volume, true, trade.Side);
-
-                if (TimeFrameBuilder.SaveTradesInCandles)
-                {
-                    CandlesAll[CandlesAll.Count - 1].Trades.Add(trade);
-                }
-
-                if (trade.OpenInterest != 0)
-                {
-                    CandlesAll[CandlesAll.Count - 1].OpenInterest = trade.OpenInterest;
-                }
             }
         }
 
