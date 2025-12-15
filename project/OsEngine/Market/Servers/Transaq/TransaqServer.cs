@@ -2006,39 +2006,47 @@ namespace OsEngine.Market.Servers.Transaq
         {
             try
             {
+                // Пытаемся найти TransactionID в активных ордерах
                 if (_activeOrders.Count > 0)
                 {
-                    for (int i = 0; i < _activeOrders.Count; i++)
+                    InfoActiveOrder activeOrder = _activeOrders.FirstOrDefault(a => a.NumberMarket == order.NumberMarket);
+                    if (activeOrder != null)
                     {
-                        if (_activeOrders[i].NumberMarket == order.NumberMarket)
-                        {
-                            order.NumberUser = _activeOrders[i].Transactionid;
-                        }
+                        order.NumberUser = activeOrder.Transactionid;
                     }
+                    else
+                    {
+                        // Если не нашли в активных, возможно, ордер уже исполнен или отменен
+                        SendLogMessage($"Order {order.NumberMarket} not found in active orders", LogMessageType.Error);
+                        return false;
+                    }
+                }
+                else if (order.NumberUser == 0)
+                {
+                    // Если TransactionID неизвестен и нет активных ордеров
+                    SendLogMessage($"TransactionID for order {order.NumberMarket} is unknown", LogMessageType.Error);
+                    return false;
                 }
 
                 string cmd = "<command id=\"cancelorder\">";
                 cmd += "<transactionid>" + order.NumberUser + "</transactionid>";
                 cmd += "</command>";
 
-                // отправка команды
                 string res = ConnectorSendCommand(cmd);
 
                 if (!res.StartsWith("<result success=\"true\""))
                 {
                     SendLogMessage("CancelOrder method error " + res, LogMessageType.Error);
+                    return false;
                 }
-                else
-                {
-                    return true;
-                }
+
+                return true;
             }
             catch (Exception ex)
             {
                 SendLogMessage(ex.ToString(), LogMessageType.Error);
+                return false;
             }
-
-            return false;
         }
 
         private RateGate _rateGateChangePriceOrder = new RateGate(1, TimeSpan.FromMilliseconds(200));
