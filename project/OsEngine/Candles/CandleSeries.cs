@@ -244,10 +244,10 @@ namespace OsEngine.Entity
                     continue;
                 }
 
-                // ====== ФИЛЬТРАЦИЯ ВЫХОДНЫХ ======
-                if (_skipWeekends && IsWeekend(trades[i].Time))
+                // ===== ФИЛЬТРАЦИЯ ВЫХОДНЫХ =====
+                if (TimeFrameBuilder.SkipWeekendData && IsWeekend(trades[i].Time))
                 {
-                    continue; // Пропускаем тики в выходные
+                    continue; // Пропускаем тик
                 }
                 // =================================
 
@@ -415,12 +415,13 @@ namespace OsEngine.Entity
                 return;
             }
 
-            // ====== ВАЖНОЕ ИЗМЕНЕНИЕ: ФИЛЬТРАЦИЯ ВЫХОДНЫХ ======
-            if (_skipWeekends && IsWeekend(trade.Time))
+            // ===== ФИЛЬТРАЦИЯ ВЫХОДНЫХ =====
+            if (TimeFrameBuilder.SkipWeekendData && IsWeekend(trade.Time))
             {
-                return; // Пропускаем тики в выходные
+                return; // Пропускаем тик
             }
-            // ==================================================
+            // =================================
+
 
             if (CandlesAll != null &&
                 CandlesAll.Count > 0 &&
