@@ -458,7 +458,7 @@ namespace OsEngine.OsTrader.Grids
 
         public bool AutoClearJournalIsOn;
 
-        public int MaxClosePositionsInJournal = 100;
+        public int MaxClosePositionsInJournal = 100000;
 
         public int MaxOpenOrdersInMarket = 5;
 
