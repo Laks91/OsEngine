@@ -2194,7 +2194,6 @@ namespace OsEngine.Market.Servers
                     for (int j = 0; j < securities.Count; j++)
                     {
                         if (securities[j].Name == curSaveSec.Name
-                            && securities[j].NameId == curSaveSec.NameId
                             && securities[j].SecurityType == curSaveSec.SecurityType
                             && securities[j].NameClass == curSaveSec.NameClass)
                         {
@@ -2423,7 +2422,7 @@ namespace OsEngine.Market.Servers
         /// </summary>
         private void _candleManager_CandleUpdateEvent(CandleSeries series)
         {
-            if (series.IsMergedByCandlesFromFile == false 
+            if (series.IsMergedByCandlesFromFile == false
                 && series.CandleCreateMethodType == "TimeShiftCandle")
             {
                 series.IsMergedByCandlesFromFile = true;
@@ -2437,18 +2436,18 @@ namespace OsEngine.Market.Servers
                 {
                     List<Candle> candlesStorage = _candleStorage.GetCandles(series.Specification, _needToLoadCandlesCountParam.Value);
 
-                    if(series.TimeFrameBuilder.CandleMarketDataType == CandleMarketDataType.MarketDepth)
+                    if (series.TimeFrameBuilder.CandleMarketDataType == CandleMarketDataType.MarketDepth)
                     {
                         // нужно вставками прогружать каждую свечу по отдельности. 
                         series.CandlesAll = series.CandlesAll.Merge(candlesStorage);
 
-                        for(int i = 0; candlesStorage != null && i < candlesStorage.Count;i++)
+                        for (int i = 0; candlesStorage != null && i < candlesStorage.Count; i++)
                         {
                             Candle candle = candlesStorage[i];
 
                             bool isInArray = false;
 
-                            for(int j = 0;j < series.CandlesAll.Count;j++)
+                            for (int j = 0; j < series.CandlesAll.Count; j++)
                             {
                                 if (series.CandlesAll[j].TimeStart == candle.TimeStart)
                                 {
@@ -2464,7 +2463,7 @@ namespace OsEngine.Market.Servers
                                     break;
                                 }
                                 else if (j != 0
-                                    && candle.TimeStart > series.CandlesAll[j-1].TimeStart
+                                    && candle.TimeStart > series.CandlesAll[j - 1].TimeStart
                                     && candle.TimeStart < series.CandlesAll[j].TimeStart)
                                 {
                                     series.CandlesAll.Insert(j, candle);
@@ -2473,17 +2472,17 @@ namespace OsEngine.Market.Servers
                                 }
                             }
 
-                            if(isInArray == false)
+                            if (isInArray == false)
                             {
                                 series.CandlesAll.Add(candle);
                             }
                         }
 
-                        if(series.CandlesAll.Count > _needToLoadCandlesCountParam.Value)
+                        if (series.CandlesAll.Count > _needToLoadCandlesCountParam.Value)
                         {
-                            series.CandlesAll = 
+                            series.CandlesAll =
                                 series.CandlesAll.GetRange(
-                                    series.CandlesAll.Count - _needToLoadCandlesCountParam.Value, 
+                                    series.CandlesAll.Count - _needToLoadCandlesCountParam.Value,
                                     _needToLoadCandlesCountParam.Value);
                         }
 
@@ -4532,9 +4531,9 @@ namespace OsEngine.Market.Servers
 
         public bool IsNonTradePeriod
         {
-            get 
+            get
             {
-                return _isNonTradingPeriodNow; 
+                return _isNonTradingPeriodNow;
             }
         }
 

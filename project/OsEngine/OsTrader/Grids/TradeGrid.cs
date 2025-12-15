@@ -69,7 +69,7 @@ namespace OsEngine.OsTrader.Grids
                 worker.Start();
 
                 RegimeLogicEntry = TradeGridLogicEntryRegime.OncePerSecond;
-                AutoClearJournalIsOn = true;
+                AutoClearJournalIsOn = false;
             }
             else
             {
