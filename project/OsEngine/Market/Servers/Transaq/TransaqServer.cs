@@ -1358,6 +1358,14 @@ namespace OsEngine.Market.Servers.Transaq
                     for (int i = 0; i < ticks.Count; i++)
                     {
                         Tick tick = ticks[i];
+
+                        DateTime tradeTime = DateTime.Parse(tick.Tradetime);
+
+                        // Пропускаем трейды в выходные дни
+                        if (IsWeekend(tradeTime))
+                        {
+                            continue;
+                        }
                         trades.Add(new Trade()
                         {
                             SecurityNameCode = tick.Seccode,
@@ -1365,7 +1373,7 @@ namespace OsEngine.Market.Servers.Transaq
                             Price = tick.Price.ToDecimal(),
                             Side = tick.Buysell == "B" ? Side.Buy : Side.Sell,
                             Volume = tick.Quantity.ToDecimal(),
-                            Time = DateTime.Parse(tick.Tradetime),
+                            Time = tradeTime,
                         });
                     }
 
@@ -2695,8 +2703,16 @@ namespace OsEngine.Market.Servers.Transaq
             {
                 TransaqEntity.Trade trade = trades[i];
 
+                DateTime tradeTime = DateTime.Parse(trade.Time);
+
+                // Пропускаем трейды в выходные дни
+                if (IsWeekend(tradeTime))
+                {
+                    continue;
+                }
+
                 MyTrade myTrade = new MyTrade();
-                myTrade.Time = DateTime.Parse(trade.Time);
+                myTrade.Time = tradeTime;
                 myTrade.NumberOrderParent = trade.Orderno;
                 myTrade.NumberTrade = trade.Tradeno;
                 myTrade.Volume = trade.Quantity.ToDecimal();
@@ -3257,6 +3273,12 @@ namespace OsEngine.Market.Servers.Transaq
                 trade.Volume = t.Quantity.ToDecimal();
                 trade.Time = DateTime.Parse(t.Time);
 
+                // Пропускаем трейды в выходные дни
+                if (IsWeekend(trade.Time))
+                {
+                    continue;
+                }
+
                 if (string.IsNullOrEmpty(t.Openinterest) == false)
                 {
                     trade.OpenInterest = t.Openinterest.ToDecimal();
@@ -3368,6 +3390,15 @@ namespace OsEngine.Market.Servers.Transaq
         }
 
         private readonly XmlDeserializer _deserializer;
+
+        /// <summary>
+        /// Проверяет, является ли день выходным (суббота или воскресенье)
+        /// </summary>
+        private bool IsWeekend(DateTime date)
+        {
+            return date.DayOfWeek == DayOfWeek.Saturday ||
+                   date.DayOfWeek == DayOfWeek.Sunday;
+        }
 
         /// <summary>
         /// converts a string of data to needed format
