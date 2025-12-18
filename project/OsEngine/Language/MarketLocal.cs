@@ -518,8 +518,8 @@ namespace OsEngine.Language
             "Ru:Смена цены ордера. Номер _");
 
         public string Label121 => OsLocalization.ConvertToLocString(
-            "Eng:You can set a client code if your broker (BСS / VTB / etc) requires it. Or when trading on a sub-account _" +
-            "Ru:Вы можете установить код клиента, если этого требует Ваш брокер (БКС / ВТБ / etc). Или когда торгуете на саб-счёте _");
+            "Eng:If you enter the client's code here, only this account will be uploaded. The portfolio and transactions will be displayed only for this account. If you trade on the same account, it is advisable to register it here so as not to display unnecessary accounts._" +
+            "Ru:Если прописать здесь код клиента, то будет подгружен только данный счет. Отображение портфеля и сделки будут осуществляться только по данному счету. Если торгуете на одном счете, желательно его прописать здесь, чтобы не отображать лишние счета_");
 
         public string Label122 => OsLocalization.ConvertToLocString(
             "Eng:Value type_" +
@@ -681,14 +681,7 @@ namespace OsEngine.Language
             "Eng:Count news to save_" +
             "Ru:Хранить новости. Кол-во_");
 
-        public string Label162 => OsLocalization.ConvertToLocString(
-          "Eng:One client code_" +
-          "Ru:Один код клиента_");
-
-        public string Label163 => OsLocalization.ConvertToLocString(
-          "Eng:If the broker uses several client codes, the value is false (for example, Finam , BCS), if there is only one client code, the value is true (for example, VTB). Used to display the portfolio. By default, false_" +
-          "Ru:Если брокер использует несколько клиентских кодов, то значение false, если клиент код всего один, то значение true (например, ВТБ). Используется для отображения портфеля. По умолчанию false_");
-
+        
         public string Label164 => OsLocalization.ConvertToLocString(
           "Eng:Name _" +
           "Ru:Имя _");
@@ -1269,8 +1262,9 @@ namespace OsEngine.Language
           "Eng:Trading mode on the Moscow Stock Exchange. Affects the display of the portfolio, accounts and positions_" +
           "Ru:Режим торгов на Московской бирже. Влияет на отображение портфеля, счетов и позиций_");
 
-
-
+        public string Label309 => OsLocalization.ConvertToLocString(
+          "Eng:Full logging of user's orders and trades. Records all the statuses of orders and trades that came from the exchange._" +
+          "Ru:Полное логирование ордеров и трейдов пользователя. Записывает все статусы ордеров и трейдов, которые пришли с биржи._");
 
 
 
@@ -1861,6 +1855,10 @@ namespace OsEngine.Language
         public string UseOther => OsLocalization.ConvertToLocString(
             "Eng:Other_" +
             "Ru:Другое_");
+
+        public string FullLogConnector => OsLocalization.ConvertToLocString(
+            "Eng:Full logging of user's orders and trades_" +
+            "Ru:Полное логирование ордеров и трейдов пользователя_");
 
         public string UseSecInfoUpdates => OsLocalization.ConvertToLocString(
             "Eng:Use sec info updates_" +
