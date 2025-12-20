@@ -1596,17 +1596,6 @@ namespace OsEngine.Market.Servers.Transaq
                     // Используем новый метод парсинга
                     osCandle.TimeStart = ParseTransaqTime(candles.Candle[i].Date);
 
-                    // ДОБАВИТЬ ПРОВЕРКУ НА ВЫХОДНЫЕ
-                    if (IsWeekend(osCandle.TimeStart))
-                    {
-                        if (_fullLog)
-                        {
-                            SendLogMessage($"Пропущена историческая свеча за выходной: {osCandle.TimeStart:dd.MM.yyyy HH:mm}",
-                                          LogMessageType.System);
-                        }
-                        continue; // Пропускаем свечу за выходной
-                    }
-
                     if (string.IsNullOrEmpty(candles.Candle[i].Oi) == false)
                     {
                         osCandle.OpenInterest = candles.Candle[i].Oi.ToDecimal();
@@ -1632,9 +1621,6 @@ namespace OsEngine.Market.Servers.Transaq
             {
                 return newCandles;
             }
-
-            // ФИЛЬТРУЕМ ВХОДЯЩИЕ СВЕЧИ
-            oldCandles = oldCandles.Where(c => !IsWeekend(c.TimeStart)).ToList();
 
             int index;
 
