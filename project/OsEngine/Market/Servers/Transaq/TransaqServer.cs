@@ -187,6 +187,54 @@ namespace OsEngine.Market.Servers.Transaq
             }
         }
 
+        private DateTime ParseTransaqTime(string timeString)
+        {
+            if (string.IsNullOrEmpty(timeString))
+                return DateTime.MinValue;
+
+            try
+            {
+                // Убираем миллисекунды, если есть
+                if (timeString.Contains("."))
+                {
+                    timeString = timeString.Split('.')[0];
+                }
+
+                // ISO 8601 с T (2024-01-13T10:30:45)
+                if (timeString.Contains("T"))
+                {
+                    return DateTime.ParseExact(timeString,
+                        "yyyy-MM-ddTHH:mm:ss",
+                        CultureInfo.InvariantCulture,
+                        DateTimeStyles.AssumeLocal);
+                }
+                // ISO 8601 с пробелом (2024-01-13 10:30:45)
+                else if (timeString.Contains(" "))
+                {
+                    return DateTime.ParseExact(timeString,
+                        "yyyy-MM-dd HH:mm:ss",
+                        CultureInfo.InvariantCulture,
+                        DateTimeStyles.AssumeLocal);
+                }
+                // Только дата (2024-01-13)
+                else if (timeString.Length == 10 && timeString.Contains("-"))
+                {
+                    return DateTime.ParseExact(timeString,
+                        "yyyy-MM-dd",
+                        CultureInfo.InvariantCulture);
+                }
+                else
+                {
+                    return DateTime.Parse(timeString, CultureInfo.InvariantCulture);
+                }
+            }
+            catch (Exception e)
+            {
+                SendLogMessage($"ParseTransaqTime error: '{timeString}', error: {e.Message}",
+                              LogMessageType.Error);
+                return DateTime.MinValue;
+            }
+        }
         private bool CheckConnectionTime(string time)
         {
             string[] parts = time.Split('/');
@@ -1345,7 +1393,8 @@ namespace OsEngine.Market.Servers.Transaq
                     ticks = _allTicks.Where(x => x.Seccode == security.Name).ToList();
                     if (ticks.Count > 0)
                     {
-                        lastTickTime = DateTime.Parse(ticks.Last().Tradetime);
+                        // Используем новый метод парсинга
+                        lastTickTime = ParseTransaqTime(ticks.Last().Tradetime);
                     }
                 }
                 catch
@@ -1359,13 +1408,15 @@ namespace OsEngine.Market.Servers.Transaq
                     {
                         Tick tick = ticks[i];
 
-                        DateTime tradeTime = DateTime.Parse(tick.Tradetime);
+                        // Используем новый метод парсинга
+                        DateTime tradeTime = ParseTransaqTime(tick.Tradetime);
 
                         // Пропускаем трейды в выходные дни
                         if (IsWeekend(tradeTime))
                         {
                             continue;
                         }
+
                         trades.Add(new Trade()
                         {
                             SecurityNameCode = tick.Seccode,
@@ -1541,7 +1592,9 @@ namespace OsEngine.Market.Servers.Transaq
                     osCandle.Low = candles.Candle[i].Low.ToDecimal();
                     osCandle.Close = candles.Candle[i].Close.ToDecimal();
                     osCandle.Volume = candles.Candle[i].Volume.ToDecimal();
-                    osCandle.TimeStart = DateTime.Parse(candles.Candle[i].Date);
+
+                    // Используем новый метод парсинга
+                    osCandle.TimeStart = ParseTransaqTime(candles.Candle[i].Date);
 
                     if (string.IsNullOrEmpty(candles.Candle[i].Oi) == false)
                     {
@@ -2703,7 +2756,8 @@ namespace OsEngine.Market.Servers.Transaq
             {
                 TransaqEntity.Trade trade = trades[i];
 
-                DateTime tradeTime = DateTime.Parse(trade.Time);
+                // Используем новый метод парсинга
+                DateTime tradeTime = ParseTransaqTime(trade.Time);
 
                 // Пропускаем трейды в выходные дни
                 if (IsWeekend(tradeTime))
@@ -3271,7 +3325,9 @@ namespace OsEngine.Market.Servers.Transaq
                 trade.Price = t.Price.ToDecimal();
                 trade.Side = t.Buysell == "B" ? Side.Buy : Side.Sell;
                 trade.Volume = t.Quantity.ToDecimal();
-                trade.Time = DateTime.Parse(t.Time);
+
+                // Используем новый метод парсинга
+                trade.Time = ParseTransaqTime(t.Time);
 
                 // Пропускаем трейды в выходные дни
                 if (IsWeekend(trade.Time))
@@ -3396,8 +3452,19 @@ namespace OsEngine.Market.Servers.Transaq
         /// </summary>
         private bool IsWeekend(DateTime date)
         {
-            return date.DayOfWeek == DayOfWeek.Saturday ||
-                   date.DayOfWeek == DayOfWeek.Sunday;
+            if (date == DateTime.MinValue)
+                return false;
+
+            DayOfWeek day = date.DayOfWeek;
+            bool isWeekend = (day == DayOfWeek.Saturday || day == DayOfWeek.Sunday);
+
+            if (isWeekend && _fullLog)
+            {
+                SendLogMessage($"Выходной обнаружен и пропущен: {date:dd.MM.yyyy HH:mm:ss} ({day})",
+                              LogMessageType.System);
+            }
+
+            return isWeekend;
         }
 
         /// <summary>
