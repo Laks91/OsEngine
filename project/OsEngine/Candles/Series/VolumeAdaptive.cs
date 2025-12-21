@@ -95,6 +95,11 @@ namespace OsEngine.Candles.Series
 
         public override void UpDateCandle(DateTime time, decimal price, decimal volume, bool canPushUp, Side side)
         {
+            if (SkipWeekendCandles && IsWeekend(time))
+            {
+                return;
+            }
+
             if (CandlesAll != null && CandlesAll.Count > 0 && CandlesAll[CandlesAll.Count - 1] != null &&
                           CandlesAll[CandlesAll.Count - 1].TimeStart > time)
             {// если пришли старые данные

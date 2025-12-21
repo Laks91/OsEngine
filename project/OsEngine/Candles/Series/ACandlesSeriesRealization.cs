@@ -37,6 +37,15 @@ namespace OsEngine.Candles.Series
 
         public Security Security;
 
+        // После строки 38 (public Security Security;)
+        protected bool SkipWeekendCandles = true;
+
+        protected bool IsWeekend(DateTime date)
+        {
+            return date.DayOfWeek == DayOfWeek.Saturday ||
+                   date.DayOfWeek == DayOfWeek.Sunday;
+        }
+
         #endregion
 
         #region Candles
