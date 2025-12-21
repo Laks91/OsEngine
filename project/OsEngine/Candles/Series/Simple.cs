@@ -402,6 +402,13 @@ namespace OsEngine.Candles.Series
                     (i + 1 == CandlesAll.Count &&
                      CandlesAll[i].TimeStart.Add(TimeFrameSpan) < now))
                 {
+                    DateTime newCandleTime = CandlesAll[i].TimeStart.Add(TimeFrameSpan);
+
+                    // ФИЛЬТР ВЫХОДНЫХ ДЛЯ ПРОПУЩЕННЫХ СВЕЧЕЙ
+                    if (SkipWeekendCandles && IsWeekend(newCandleTime))
+                    {
+                        continue; // Пропускаем свечи в выходные
+                    }
                     Candle candle = new Candle();
                     candle.TimeStart = CandlesAll[i].TimeStart.Add(TimeFrameSpan);
                     candle.High = CandlesAll[i].Close;

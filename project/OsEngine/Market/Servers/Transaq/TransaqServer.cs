@@ -1546,6 +1546,11 @@ namespace OsEngine.Market.Servers.Transaq
                     if (string.IsNullOrEmpty(candles.Candle[i].Oi) == false)
                     {
                         osCandle.OpenInterest = candles.Candle[i].Oi.ToDecimal();
+                        // ФИЛЬТРАЦИЯ ВЫХОДНЫХ В КОННЕКТОРЕ
+                        if (IsWeekend(osCandle.TimeStart))
+                        {
+                            continue; // Пропускаем
+                        }
                     }
 
                     osCandles.Add(osCandle);

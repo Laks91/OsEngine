@@ -243,6 +243,14 @@ namespace OsEngine.Entity
                 {
                     continue;
                 }
+
+                // ФИЛЬТРАЦИЯ ВЫХОДНЫХ ПЕРЕД СОЗДАНИЕМ СВЕЧЕЙ
+                if (TimeFrameBuilder.CandleSeriesRealization.SkipWeekendCandles &&
+                    IsWeekend(trades[i].Time))
+                {
+                    continue; // Пропускаем трейды из выходных
+                }
+
                 UpDateCandle(trades[i].Time, trades[i].Price, trades[i].Volume, false, trades[i].Side);
 
                 List<Trade> tradesInCandle = CandlesAll[CandlesAll.Count - 1].Trades;
@@ -317,7 +325,12 @@ namespace OsEngine.Entity
         #endregion
 
         #region Candles building
-
+        // ДОБАВЬТЕ ЭТОТ МЕТОД В КЛАСС CandleSeries
+        private bool IsWeekend(DateTime date)
+        {
+            return date.DayOfWeek == DayOfWeek.Saturday ||
+                   date.DayOfWeek == DayOfWeek.Sunday;
+        }
         public void SetNewTime(DateTime time)
         {
             if (_isStoped || _isStarted == false)
@@ -579,6 +592,13 @@ namespace OsEngine.Entity
 
             if (CandlesAll.Count == 0)
             {
+                // ФИЛЬТРАЦИЯ ВЫХОДНЫХ
+                if (TimeFrameBuilder.CandleSeriesRealization.SkipWeekendCandles &&
+                    IsWeekend(candle.TimeStart))
+                {
+                    return; // Пропускаем свечу из выходных
+                }
+
                 CandlesAll.Add(candle);
                 return;
             }
@@ -586,6 +606,13 @@ namespace OsEngine.Entity
             if (CandlesAll[CandlesAll.Count - 1].TimeStart > candle.TimeStart)
             {
                 return;
+            }
+
+            // ФИЛЬТРАЦИЯ ВЫХОДНЫХ
+            if (TimeFrameBuilder.CandleSeriesRealization.SkipWeekendCandles &&
+                IsWeekend(candle.TimeStart))
+            {
+                return; // Пропускаем свечу из выходных
             }
 
             if (CandlesAll[CandlesAll.Count - 1].TimeStart == candle.TimeStart)
