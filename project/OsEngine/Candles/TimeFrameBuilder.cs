@@ -40,6 +40,8 @@ namespace OsEngine.Entity
                 TimeFrame = TimeFrame.Min1;
             }
         }
+        // В классе TimeFrameBuilder или его реализации
+        public bool SkipWeekendData { get; set; } = true;
 
         public TimeFrameBuilder(StartProgram startProgram)
         {

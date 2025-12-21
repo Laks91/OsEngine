@@ -362,6 +362,10 @@ namespace OsEngine.Journal.Internal
             }
             catch (Exception error)
             {
+                if(error.ToString().Contains("cannot access"))
+                {
+                    return;
+                }
                 SendNewLogMessage(error.ToString(), LogMessageType.Error);
             }
         }
@@ -612,7 +616,14 @@ namespace OsEngine.Journal.Internal
                     {
                         for (int indexCloseOrders = 0; indexCloseOrders < curPosition.CloseOrders.Count; indexCloseOrders++)
                         {
-                            if (curPosition.CloseOrders[indexCloseOrders].NumberUser == updateOrder.NumberUser)
+                            if (curPosition.CloseOrders[indexCloseOrders].NumberUser == updateOrder.NumberUser
+                                 && string.IsNullOrEmpty(curPosition.CloseOrders[indexCloseOrders].NumberMarket))
+                            {
+                                isCloseOrder = true;
+                                break;
+                            }
+                            else if (curPosition.CloseOrders[indexCloseOrders].NumberUser == updateOrder.NumberUser
+                                && curPosition.CloseOrders[indexCloseOrders].NumberMarket == updateOrder.NumberMarket)
                             {
                                 isCloseOrder = true;
                                 break;
@@ -632,7 +643,14 @@ namespace OsEngine.Journal.Internal
                                 continue;
                             }
 
-                            if (curPosition.OpenOrders[indexOpenOrd].NumberUser == updateOrder.NumberUser)
+                            if (curPosition.OpenOrders[indexOpenOrd].NumberUser == updateOrder.NumberUser
+                                 && string.IsNullOrEmpty(curPosition.OpenOrders[indexOpenOrd].NumberMarket))
+                            {
+                                isOpenOrder = true;
+                                break;
+                            }
+                            if (curPosition.OpenOrders[indexOpenOrd].NumberUser == updateOrder.NumberUser
+                                && curPosition.OpenOrders[indexOpenOrd].NumberMarket == updateOrder.NumberMarket)
                             {
                                 isOpenOrder = true;
                                 break;

@@ -298,6 +298,12 @@ namespace OsEngine.Entity
                     series.TimeFrameSpan.TotalMinutes < 1)
                 {
                     List<Trade> allTrades = _server.GetAllTradesToSecurity(series.Security);
+                    // ФИЛЬТРУЕМ если включена настройка
+                    if (series.TimeFrameBuilder.SkipWeekendData)
+                    {
+                        allTrades = FilterWeekendTrades(allTrades);
+                    }
+
                     series.PreLoad(allTrades);
                 }
                 else
@@ -314,6 +320,11 @@ namespace OsEngine.Entity
 
                     if (candles != null)
                     {
+
+                        if (series.TimeFrameBuilder.SkipWeekendData)
+                        {
+                            candles = FilterWeekendCandles(candles);
+                        }
                         series.CandlesAll = candles;
                     }
                 }
@@ -326,7 +337,41 @@ namespace OsEngine.Entity
                 SendLogMessage(ex.ToString(), LogMessageType.Error);
             }
         }
+        private List<Candle> FilterWeekendCandles(List<Candle> candles)
+        {
+            if (candles == null) return null;
 
+            List<Candle> result = new List<Candle>();
+            foreach (Candle candle in candles)
+            {
+                if (!IsWeekend(candle.TimeStart))
+                {
+                    result.Add(candle);
+                }
+            }
+            return result;
+        }
+
+        private List<Trade> FilterWeekendTrades(List<Trade> trades)
+        {
+            if (trades == null) return null;
+
+            List<Trade> result = new List<Trade>();
+            foreach (Trade trade in trades)
+            {
+                if (!IsWeekend(trade.Time))
+                {
+                    result.Add(trade);
+                }
+            }
+            return result;
+        }
+
+        private bool IsWeekend(DateTime time)
+        {
+            return time.DayOfWeek == DayOfWeek.Saturday ||
+                   time.DayOfWeek == DayOfWeek.Sunday;
+        }
         /// <summary>
         /// start creating candles in a new series of candles
         /// </summary>

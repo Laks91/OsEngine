@@ -276,19 +276,16 @@ namespace OsEngine.Market.Servers.Bybit
             {
                 try
                 {
-                    lock (_httpClientLocker)
-                    {
-                        httpClient?.Dispose();
-                        httpClientHandler?.Dispose();
-                    }
-
-                    httpClient = null;
-                    httpClientHandler = null;
+                    httpClient?.Dispose();
+                    httpClientHandler?.Dispose();
                 }
                 catch (Exception ex)
                 {
                     SendLogMessage(ex.Message, LogMessageType.Error);
                 }
+
+                httpClient = null;
+                httpClientHandler = null;
             }
             catch
             {
@@ -424,7 +421,7 @@ namespace OsEngine.Market.Servers.Bybit
         {
             get
             {
-                if (((ServerParameterBool)ServerParameters[15]).Value)
+                if (((ServerParameterBool)ServerParameters[14]).Value)
                 {
                     return 50;
                 }
@@ -822,30 +819,6 @@ namespace OsEngine.Market.Servers.Bybit
             {
                 return 0;
             }
-        }
-
-        private decimal GetVolumeStepByVolumeDecimals(int volumeDecimals)
-        {
-            if (volumeDecimals == 0)
-            {
-                return 1;
-            }
-
-            string result = "0.";
-
-            for (int i = 0; i < volumeDecimals; i++)
-            {
-                if (i + 1 == volumeDecimals)
-                {
-                    result += "1";
-                }
-                else
-                {
-                    result += "0";
-                }
-            }
-
-            return result.ToDecimal();
         }
 
         #endregion 3
@@ -1290,7 +1263,7 @@ namespace OsEngine.Market.Servers.Bybit
 
         #region 5 Data
 
-        private RateGate _rateGateGetCandleHistory = new RateGate(5, TimeSpan.FromMilliseconds(100));
+        private RateGate _rateGateGetCandleHistory = new RateGate(1, TimeSpan.FromMilliseconds(50));
         private string _rateGateGetCandleHistoryLocker = "_rateGateGetCandleHistoryLocker";
 
         public List<Candle> GetLastCandleHistory(Security security, TimeFrameBuilder timeFrameBuilder, int candleCount)
@@ -1300,12 +1273,11 @@ namespace OsEngine.Market.Servers.Bybit
                 return new List<Candle>(); // no option history
             }
 
-            lock (_rateGateGetCandleHistoryLocker)
-            {
-                _rateGateGetCandleHistory.WaitToProceed();
-            }
+            int tfTotalMinutes = (int)timeFrameBuilder.TimeFrameTimeSpan.TotalMinutes;
+            DateTime endTime = DateTime.UtcNow;
+            DateTime startTime = endTime.AddMinutes(-tfTotalMinutes * candleCount);
 
-            return GetCandleHistory(security.Name, timeFrameBuilder.TimeFrameTimeSpan, false, DateTime.UtcNow, candleCount);
+            return GetCandleDataToSecurity(security, timeFrameBuilder, startTime, endTime, endTime);
         }
 
         public List<Candle> GetCandleHistory(string nameSec, TimeSpan tf, bool IsOsData, DateTime timeEnd, int CountToLoad)
@@ -1366,6 +1338,11 @@ namespace OsEngine.Market.Servers.Bybit
 
         public List<Candle> GetCandleDataToSecurity(Security security, TimeFrameBuilder timeFrameBuilder, DateTime startTime, DateTime endTime, DateTime actualTime)
         {
+            lock (_rateGateGetCandleHistoryLocker)
+            {
+                _rateGateGetCandleHistory.WaitToProceed();
+            }
+
             try
             {
                 if (actualTime < startTime || actualTime > endTime)
@@ -1441,11 +1418,6 @@ namespace OsEngine.Market.Servers.Bybit
             return null;
         }
 
-        public List<Trade> GetTickDataToSecurity(Security security, DateTime startTime, DateTime endTime, DateTime actualTime)
-        {
-            return null;
-        }
-
         private List<Candle> GetListCandles(string candlesQuery)
         {
             List<Candle> candles = new List<Candle>();
@@ -1509,6 +1481,11 @@ namespace OsEngine.Market.Servers.Bybit
             dictionary.Add(1440, "D");
 
             return dictionary;
+        }
+
+        public List<Trade> GetTickDataToSecurity(Security security, DateTime startTime, DateTime endTime, DateTime actualTime)
+        {
+            return null;
         }
 
         #endregion 5
@@ -3162,98 +3139,138 @@ namespace OsEngine.Market.Servers.Bybit
                     marketDepth.Bids.Clear();
                 }
 
-                if (responseDepth.data.a.Length > 1)
+                if (responseDepth.data.a != null
+                    && responseDepth.data.a.Length > 1)
                 {
                     for (int i = 0; i < (responseDepth.data.a.Length / 2); i++)
                     {
                         double.TryParse(responseDepth.data.a[i, 0], System.Globalization.NumberStyles.Number, cultureInfo, out double aPrice);
                         double.TryParse(responseDepth.data.a[i, 1], System.Globalization.NumberStyles.Number, cultureInfo, out double aAsk);
 
-                        if (marketDepth.Asks.Exists(a => a.Price == aPrice))
+                        int index = -1;
+
+                        for (int j = 0; j < marketDepth.Asks.Count; j++)
                         {
-                            if (aAsk == 0)
+                            if (marketDepth.Asks[j].Price == aPrice)
                             {
-                                marketDepth.Asks.RemoveAll(a => a.Price == aPrice);
+                                index = j;
+                                break;
                             }
-                            else
+                        }
+
+                        if (aAsk == 0)
+                        {
+                            if (index >= 0)
                             {
-                                for (int j = 0; j < marketDepth.Asks.Count; j++)
-                                {
-                                    if (marketDepth.Asks[j].Price == aPrice)
-                                    {
-                                        marketDepth.Asks[j].Ask = aAsk;
-                                        break;
-                                    }
-                                }
+                                marketDepth.Asks.RemoveAt(index);
                             }
                         }
                         else
                         {
-                            MarketDepthLevel marketDepthLevel = new MarketDepthLevel();
-                            marketDepthLevel.Ask = aAsk;
-                            marketDepthLevel.Price = aPrice;
-                            marketDepth.Asks.Add(marketDepthLevel);
-                            marketDepth.Asks.RemoveAll(a => a.Ask == 0);
-                            marketDepth.Bids.RemoveAll(a => a.Price == aPrice && aPrice != 0);
-                            SortAsks(marketDepth.Asks);
+                            if (index >= 0)
+                            {
+                                marketDepth.Asks[index].Ask = aAsk;
+                            }
+                            else
+                            {
+                                marketDepth.Asks.Add(new MarketDepthLevel { Price = aPrice, Ask = aAsk });
+                                marketDepth.Asks.RemoveAll(a => a.Ask == 0);
+                            }
                         }
                     }
+
+                    SortAsks(marketDepth.Asks);
                 }
-                if (responseDepth.data.b.Length > 1)
+
+                if (responseDepth.data.b != null
+                    && responseDepth.data.b.Length > 1)
                 {
                     for (int i = 0; i < (responseDepth.data.b.Length / 2); i++)
                     {
                         double.TryParse(responseDepth.data.b[i, 0], System.Globalization.NumberStyles.Number, cultureInfo, out double bPrice);
                         double.TryParse(responseDepth.data.b[i, 1], System.Globalization.NumberStyles.Number, cultureInfo, out double bBid);
 
-                        if (marketDepth.Bids.Exists(b => b.Price == bPrice))
+                        int index = -1;
+
+                        for (int j = 0; j < marketDepth.Bids.Count; j++)
                         {
-                            if (bBid == 0)
+                            if (marketDepth.Bids[j].Price == bPrice)
                             {
-                                marketDepth.Bids.RemoveAll(b => b.Price == bPrice);
+                                index = j;
+                                break;
                             }
-                            else
+                        }
+
+                        if (bBid == 0)
+                        {
+                            if (index >= 0)
                             {
-                                for (int j = 0; j < marketDepth.Bids.Count; j++)
-                                {
-                                    if (marketDepth.Bids[j].Price == bPrice)
-                                    {
-                                        marketDepth.Bids[j].Bid = bBid;
-                                        break;
-                                    }
-                                }
+                                marketDepth.Bids.RemoveAt(index);
                             }
                         }
                         else
                         {
-                            MarketDepthLevel marketDepthLevel = new MarketDepthLevel();
-                            marketDepthLevel.Bid = bBid;
-                            marketDepthLevel.Price = bPrice;
-                            marketDepth.Bids.Add(marketDepthLevel);
-                            marketDepth.Bids.RemoveAll(a => a.Bid == 0);
-                            marketDepth.Asks.RemoveAll(a => a.Price == bPrice && bPrice != 0);
-                            SortBids(marketDepth.Bids);
+                            if (index >= 0)
+                            {
+                                marketDepth.Bids[index].Bid = bBid;
+                            }
+                            else
+                            {
+                                marketDepth.Bids.Add(new MarketDepthLevel { Price = bPrice, Bid = bBid });
+                                marketDepth.Bids.RemoveAll(b => b.Bid == 0);
+                            }
                         }
                     }
+
+                    SortBids(marketDepth.Bids);
                 }
 
                 marketDepth.Time = TimeManager.GetDateTimeFromTimeStamp((long)responseDepth.ts.ToDecimal());
 
-                int _depthDeep = marketDepthDeep;
-
-                if (marketDepthDeep > 20)
+                for (int i = 0; i < marketDepth.Asks.Count; i++)
                 {
-                    _depthDeep = 20;
+                    MarketDepthLevel curLevel = marketDepth.Asks[i];
+
+                    for (int j = 0; j < marketDepth.Asks.Count; j++)
+                    {
+                        if (j == i)
+                        {
+                            continue;
+                        }
+
+                        if (curLevel.Price == marketDepth.Asks[j].Price)
+                        {
+                            marketDepth.Asks.RemoveAt(j);
+                        }
+                    }
                 }
 
-                while (marketDepth.Asks.Count > _depthDeep)
+                for (int i = 0; i < marketDepth.Bids.Count; i++)
                 {
-                    marketDepth.Asks.RemoveAt(_depthDeep);
+                    MarketDepthLevel curLevel = marketDepth.Bids[i];
+
+                    for (int j = 0; j < marketDepth.Bids.Count; j++)
+                    {
+                        if (j == i)
+                        {
+                            continue;
+                        }
+
+                        if (curLevel.Price == marketDepth.Bids[j].Price)
+                        {
+                            marketDepth.Bids.RemoveAt(j);
+                        }
+                    }
                 }
 
-                while (marketDepth.Bids.Count > _depthDeep)
+                while (marketDepth.Asks.Count > 25)
                 {
-                    marketDepth.Bids.RemoveAt(_depthDeep);
+                    marketDepth.Asks.RemoveAt(marketDepth.Asks.Count - 1);
+                }
+
+                while (marketDepth.Bids.Count > 25)
+                {
+                    marketDepth.Bids.RemoveAt(marketDepth.Bids.Count - 1);
                 }
 
                 if (marketDepth.Asks.Count == 0)
@@ -4839,8 +4856,8 @@ namespace OsEngine.Market.Servers.Bybit
                     parameters.Clear();
                     parameters["category"] = category;
                     parameters["symbol"] = security.Name.Split(".")[0];
-                    parameters["buyLeverage"] = leverage.ToString();
-                    parameters["sellLeverage"] = leverage.ToString();
+                    parameters["buyLeverage"] = leverage.ToString().Replace(",", ".");
+                    parameters["sellLeverage"] = leverage.ToString().Replace(",", ".");
 
                     response = CreatePrivateQuery(parameters, HttpMethod.Post, "/v5/position/set-leverage");
                 }
@@ -4854,12 +4871,12 @@ namespace OsEngine.Market.Servers.Bybit
 
                 if (jsonResponce.retMsg != "OK")
                 {
-                    SendLogMessage($"SetLeverage: {jsonResponce.retMsg}", LogMessageType.Error);
+                    SendLogMessage($"SetLeverage: {security.Name} - {jsonResponce.retMsg}", LogMessageType.Error);
                 }
             }
             catch (Exception ex)
             {
-                SendLogMessage($"SetLeverage: {ex.Message} {ex.StackTrace}", LogMessageType.Error);
+                SendLogMessage($"SetLeverage: {security.Name} - {ex.Message} {ex.StackTrace}", LogMessageType.Error);
             }
         }
 
