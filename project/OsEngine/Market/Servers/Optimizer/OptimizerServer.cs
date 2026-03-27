@@ -11,6 +11,7 @@ using OsEngine.Language;
 using OsEngine.Logging;
 using OsEngine.Market.Servers.Tester;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace OsEngine.Market.Servers.Optimizer
 {
@@ -365,72 +366,89 @@ namespace OsEngine.Market.Servers.Optimizer
 
         public void GetDataToSecurity(Security security, TimeFrame timeFrame, DateTime timeStart, DateTime timeEnd)
         {
-            DataStorage newStorage = _storagePrime.GetStorageToSecurity(security, timeFrame, timeStart, timeEnd);
-
-            if (newStorage == null)
-            {
-                newStorage = _storagePrime.GetStorageToSecurity(security, timeFrame, timeStart, timeEnd);
-
-                if (newStorage == null)
-                {
-                    SendLogMessage(OsLocalization.Market.Message36, LogMessageType.Error);
-                    return;
-                }
-            }
-
-            if (_storages.Find(s => s.Security.Name == newStorage.Security.Name &&
-                                    s.Candles == newStorage.Candles &&
-                                    s.TimeFrame == newStorage.TimeFrame &&
-                                    s.Trades == newStorage.Trades &&
-                                    s.MarketDepths == newStorage.MarketDepths) != null)
+            if(security == null)
             {
                 return;
             }
-
-            _storages.Add(newStorage);
-
-            if (_securities.Find(s => s.Name == _storages[_storages.Count - 1].Security.Name) == null)
+            
+            try
             {
-                _securities.Add(_storages[_storages.Count - 1].Security);
-            }
+                DataStorage newStorage = _storagePrime.GetStorageToSecurity(security, timeFrame, timeStart, timeEnd);
 
-            SecurityOptimizer securityOpt = new SecurityOptimizer();
-            securityOpt.Security = security;
-            securityOpt.TimeFrame = timeFrame;
-            securityOpt.TimeFrameSpan = GetTimeFremeInSpan(timeFrame);
-            securityOpt.TimeStart = timeStart;
-            securityOpt.TimeEnd = timeEnd;
-            securityOpt.RealEndTime = timeEnd.AddDays(1);
-            securityOpt.NewCandleEvent += TesterServer_NewCandleEvent;
-            securityOpt.NewTradesEvent += TesterServer_NewTradesEvent;
-            securityOpt.NeedToCheckOrders += TesterServer_NeedToCheckOrders;
-            securityOpt.NewMarketDepthEvent += TesterServer_NewMarketDepthEvent;
-            securityOpt.LogMessageEvent += SendLogMessage;
+                if (newStorage == null)
+                {
+                    newStorage = _storagePrime.GetStorageToSecurity(security, timeFrame, timeStart, timeEnd);
 
-            if (_storages[_storages.Count - 1].StorageType == TesterDataType.Candle)
-            {
-                securityOpt.DataType = SecurityTesterDataType.Candle;
-                securityOpt.Candles = _storages[_storages.Count - 1].Candles;
-            }
-            else if (_storages[_storages.Count - 1].StorageType == TesterDataType.TickOnlyReadyCandle)
-            {
-                securityOpt.DataType = SecurityTesterDataType.Tick;
-                securityOpt.Trades = _storages[_storages.Count - 1].Trades;
-            }
-            else if (_storages[_storages.Count - 1].StorageType == TesterDataType.TickAllCandleState)
-            {
-                securityOpt.DataType = SecurityTesterDataType.Tick;
-                securityOpt.Trades = _storages[_storages.Count - 1].Trades;
-            }
-            else if (_storages[_storages.Count - 1].StorageType == TesterDataType.MarketDepthOnlyReadyCandle)
-            {
-                securityOpt.DataType = SecurityTesterDataType.MarketDepth;
-                securityOpt.MarketDepths = _storages[_storages.Count - 1].MarketDepths;
-            }
+                    if (newStorage == null)
+                    {
+                        SendLogMessage(OsLocalization.Market.Message36, LogMessageType.Error);
+                        return;
+                    }
+                }
 
-            _candleSeriesTesterActivate.Add(securityOpt);
+                if (_storages.Find(s => s.Security.Name == newStorage.Security.Name &&
+                                        s.Candles == newStorage.Candles &&
+                                        s.TimeFrame == newStorage.TimeFrame &&
+                                        s.Trades == newStorage.Trades &&
+                                        s.MarketDepths == newStorage.MarketDepths) != null)
+                {
+                    return;
+                }
 
-            ServerStatus = ServerConnectStatus.Connect;
+                _storages.Add(newStorage);
+
+                if (_securities.Find(s => s.Name == _storages[_storages.Count - 1].Security.Name) == null)
+                {
+                    _securities.Add(_storages[_storages.Count - 1].Security);
+                }
+
+                SecurityOptimizer securityOpt = new SecurityOptimizer();
+                securityOpt.Security = security;
+                securityOpt.TimeFrame = timeFrame;
+                securityOpt.TimeFrameSpan = GetTimeFremeInSpan(timeFrame);
+                securityOpt.TimeStart = timeStart;
+                securityOpt.TimeEnd = timeEnd;
+                securityOpt.RealEndTime = timeEnd.AddDays(1);
+                securityOpt.NewCandleEvent += TesterServer_NewCandleEvent;
+                securityOpt.NewTradesEvent += TesterServer_NewTradesEvent;
+                securityOpt.NeedToCheckOrders += TesterServer_NeedToCheckOrders;
+                securityOpt.NewMarketDepthEvent += TesterServer_NewMarketDepthEvent;
+                securityOpt.LogMessageEvent += SendLogMessage;
+
+                if (_storages[_storages.Count - 1].StorageType == TesterDataType.Candle)
+                {
+                    securityOpt.DataType = SecurityTesterDataType.Candle;
+                    securityOpt.Candles = _storages[_storages.Count - 1].Candles;
+                }
+                else if (_storages[_storages.Count - 1].StorageType == TesterDataType.TickOnlyReadyCandle)
+                {
+                    securityOpt.DataType = SecurityTesterDataType.Tick;
+                    securityOpt.Trades = _storages[_storages.Count - 1].Trades;
+                }
+                else if (_storages[_storages.Count - 1].StorageType == TesterDataType.TickAllCandleState)
+                {
+                    securityOpt.DataType = SecurityTesterDataType.Tick;
+                    securityOpt.Trades = _storages[_storages.Count - 1].Trades;
+                }
+                else if (_storages[_storages.Count - 1].StorageType == TesterDataType.MarketDepthOnlyReadyCandle)
+                {
+                    securityOpt.DataType = SecurityTesterDataType.MarketDepth;
+                    securityOpt.MarketDepths = _storages[_storages.Count - 1].MarketDepths;
+                }
+
+                _candleSeriesTesterActivate.Add(securityOpt);
+
+                if (_candleSeriesTesterActivate.Count > 1)
+                {
+                    _candleSeriesTesterActivate = _candleSeriesTesterActivate.OrderBy(x => x.Security.Name).ToList();
+                }
+
+                ServerStatus = ServerConnectStatus.Connect;
+            }
+            catch(Exception error)
+            {
+                SendLogMessage(error.ToString(),LogMessageType.Error);
+            }
         }
 
         public DateTime TimeNow;
@@ -2082,7 +2100,7 @@ namespace OsEngine.Market.Servers.Optimizer
                         continue;
                     }
 
-                    NewTradeEvent(trade);
+                    NewTradeEvent?.Invoke(trade);
                 }
             }
 
@@ -2150,6 +2168,11 @@ namespace OsEngine.Market.Servers.Optimizer
         public void SetLeverage(Security security, decimal leverage)
         {
 
+        }
+
+        public List<string> GetQshHistoryFileToSecurity(string securityName, string securityClass, DateTime startTime, DateTime endTime, DateTime actualTime, bool needToUpdete)
+        {
+            return null;
         }
 
         List<SecurityLeverageData> IServer.ListLeverageData => null;

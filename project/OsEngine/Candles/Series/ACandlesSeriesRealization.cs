@@ -36,7 +36,6 @@ namespace OsEngine.Candles.Series
         }
 
         public Security Security;
-
         // После строки 38 (public Security Security;)
         public bool SkipWeekendCandles = true;
 

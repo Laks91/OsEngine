@@ -99,7 +99,6 @@ namespace OsEngine.Candles.Series
             {
                 return;
             }
-
             if (CandlesAll != null && CandlesAll.Count > 0 && CandlesAll[CandlesAll.Count - 1] != null &&
                           CandlesAll[CandlesAll.Count - 1].TimeStart > time)
             {// если пришли старые данные

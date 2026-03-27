@@ -182,6 +182,7 @@ namespace OsEngine.OsOptimizer
             LabelRobustnessMetric.Content = OsLocalization.Optimizer.Label53;
             ButtonSetStandardParameters.Content = OsLocalization.Optimizer.Label57;
             LabelSeriesResultChart.Content = OsLocalization.Optimizer.Label67;
+            LabelTotalAbsProfit.Content = OsLocalization.Optimizer.Label54;
 
             _resultsCharting = new OptimizerReportCharting(
                 HostStepsOfOptimizationTable,
@@ -207,6 +208,7 @@ namespace OsEngine.OsOptimizer
         {
             try
             {
+
                 AcceptDialogUi ui = new AcceptDialogUi(OsLocalization.Data.Label27);
                 ui.ShowDialog();
 
@@ -215,6 +217,8 @@ namespace OsEngine.OsOptimizer
                     e.Cancel = true;
                     return;
                 }
+
+                _isClosed = true;
 
                 ComboBoxThreadsCount.SelectionChanged -= ComboBoxThreadsCount_SelectionChanged;
 
@@ -323,6 +327,8 @@ namespace OsEngine.OsOptimizer
         private OptimizerReportCharting _resultsCharting;
 
         private OptimizerMaster _master;
+
+        private bool _isClosed;
 
         private void StopUserActivity()
         {
@@ -437,7 +443,7 @@ namespace OsEngine.OsOptimizer
             }
             catch (Exception error)
             {
-                _master.SendLogMessage(error.ToString(), LogMessageType.Error);
+                _master?.SendLogMessage(error.ToString(), LogMessageType.Error);
             }
         }
 
@@ -463,7 +469,7 @@ namespace OsEngine.OsOptimizer
             }
             catch (Exception error)
             {
-                _master.SendLogMessage(error.ToString(), LogMessageType.Error);
+                _master?.SendLogMessage(error.ToString(), LogMessageType.Error);
             }
         }
 
@@ -579,6 +585,11 @@ namespace OsEngine.OsOptimizer
             {
                 Thread.Sleep(1500);
 
+                if(_isClosed == true)
+                {
+                    return;
+                }
+
                 if (MainWindow.ProccesIsWorked == false)
                 {
                     return;
@@ -617,6 +628,11 @@ namespace OsEngine.OsOptimizer
                     return;
                 }
 
+                if(_master == null)
+                {
+                    return;
+                }
+
                 ProgressBarStatus primeStatus = _master.PrimeProgressBarStatus;
 
                 if (primeStatus.MaxValue != 0 &&
@@ -634,8 +650,8 @@ namespace OsEngine.OsOptimizer
                     return;
                 }
 
-                for (int i = statuses.Count-1, i2 = _progressBars.Count-1; 
-                    i >= 0 && i2 >= 0; 
+                for (int i = statuses.Count - 1, i2 = _progressBars.Count - 1;
+                    i >= 0 && i2 >= 0;
                     i2--, i--)
                 {
                     ProgressBarStatus status = statuses[i];
@@ -645,11 +661,11 @@ namespace OsEngine.OsOptimizer
                         return;
                     }
 
-                    if(_progressBars[i2].Maximum != status.MaxValue)
+                    if (_progressBars[i2].Maximum != status.MaxValue)
                     {
                         _progressBars[i2].Maximum = status.MaxValue;
                     }
-                    if(_progressBars[i2].Value != status.CurrentValue)
+                    if (_progressBars[i2].Value != status.CurrentValue)
                     {
                         _progressBars[i2].Value = status.CurrentValue;
                     }
@@ -657,7 +673,7 @@ namespace OsEngine.OsOptimizer
             }
             catch (Exception ex)
             {
-                _master.SendLogMessage(ex.ToString(), LogMessageType.Error);
+                _master?.SendLogMessage(ex.ToString(), LogMessageType.Error);
             }
         }
 
@@ -896,13 +912,10 @@ namespace OsEngine.OsOptimizer
         private void CommissionValueTextBoxOnTextChanged(object sender, TextChangedEventArgs e)
         {
             decimal commissionValue;
+
             try
             {
-                var isParsed = decimal.TryParse(CommissionValueTextBox.Text, out commissionValue);
-                if (!isParsed || commissionValue < 0)
-                {
-                    throw new Exception();
-                }
+                commissionValue = CommissionValueTextBox.Text.ToDecimal();
             }
             catch
             {
@@ -939,7 +952,7 @@ namespace OsEngine.OsOptimizer
             }
             catch (Exception ex)
             {
-                _master.SendLogMessage(ex.ToString(), LogMessageType.Error);
+                _master?.SendLogMessage(ex.ToString(), LogMessageType.Error);
             }
         }
 
@@ -981,6 +994,7 @@ namespace OsEngine.OsOptimizer
         private void CreateTableSources()
         {
             _gridSources = DataGridFactory.GetDataGridView(DataGridViewSelectionMode.ColumnHeaderSelect, DataGridViewAutoSizeRowsMode.AllCells);
+            _gridSources.ScrollBars = ScrollBars.Vertical;
 
             DataGridViewTextBoxCell cell0 = new DataGridViewTextBoxCell();
             cell0.Style = _gridSources.DefaultCellStyle;
@@ -1031,7 +1045,7 @@ namespace OsEngine.OsOptimizer
 
         private void _gridSources_DataError(object sender, DataGridViewDataErrorEventArgs e)
         {
-            _master.SendLogMessage(e.ToString(), LogMessageType.Error);
+            _master?.SendLogMessage(e.ToString(), LogMessageType.Error);
         }
 
         private void PaintTableSources()
@@ -1077,6 +1091,8 @@ namespace OsEngine.OsOptimizer
                 return;
             }
 
+            int selectedRow = _gridSources.FirstDisplayedScrollingRowIndex;
+
             _gridSources.Rows.Clear();
 
             if (sources == null)
@@ -1107,6 +1123,12 @@ namespace OsEngine.OsOptimizer
                 }
 
                 _gridSources.Rows.Add(row);
+            }
+
+            if(selectedRow != -1 
+                && selectedRow > _gridSources.Rows.Count)
+            {
+                _gridSources.FirstDisplayedScrollingRowIndex = selectedRow;
             }
         }
 
@@ -1264,7 +1286,7 @@ namespace OsEngine.OsOptimizer
             row.Cells.Add(cell2);
 
             DataGridViewButtonCell button = new DataGridViewButtonCell();
-            button.Value = "Settings";
+            button.Value = OsLocalization.Optimizer.Message22;
             row.Cells.Add(button);
 
             return row;
@@ -1301,7 +1323,7 @@ namespace OsEngine.OsOptimizer
             row.Cells.Add(cell2);
 
             DataGridViewButtonCell button = new DataGridViewButtonCell();
-            button.Value = "Settings";
+            button.Value = OsLocalization.Optimizer.Message22;
             row.Cells.Add(button);
 
             return row;
@@ -1341,7 +1363,7 @@ namespace OsEngine.OsOptimizer
             cell2.ReadOnly = true;
 
             DataGridViewButtonCell button = new DataGridViewButtonCell();
-            button.Value = "Settings";
+            button.Value = OsLocalization.Optimizer.Message22;
             row.Cells.Add(button);
 
             return row;
@@ -1465,7 +1487,7 @@ namespace OsEngine.OsOptimizer
             }
             catch (Exception ex)
             {
-                _master.SendLogMessage(ex.ToString(), LogMessageType.Error);
+                _master?.SendLogMessage(ex.ToString(), LogMessageType.Error);
             }
         }
 
@@ -1724,7 +1746,7 @@ namespace OsEngine.OsOptimizer
             {
                 return;
             }
-            _master.SendLogMessage(e.ToString(), LogMessageType.Error);
+            _master?.SendLogMessage(e.ToString(), LogMessageType.Error);
         }
 
         private void PaintTableParameters()
@@ -1789,7 +1811,7 @@ namespace OsEngine.OsOptimizer
             }
             catch (Exception ex)
             {
-                _master.SendLogMessage(ex.ToString(), LogMessageType.Error);
+                _master?.SendLogMessage(ex.ToString(), LogMessageType.Error);
             }
         }
 
@@ -2320,7 +2342,9 @@ namespace OsEngine.OsOptimizer
             try
             {
 
-                for (int i_param = 0, i_grid = 0; i_param < _parameters.Count; i_param++, i_grid++)
+                for (int i_param = 0, i_grid = 0; 
+                    i_param < _parameters.Count && i_grid < _gridParameters.Rows.Count; 
+                    i_param++, i_grid++)
                 {
                     IIStrategyParameter parameter = _parameters[i_param];
                     DataGridViewRow row = _gridParameters.Rows[i_grid];
@@ -2491,8 +2515,9 @@ namespace OsEngine.OsOptimizer
                 }
                 _master.SaveStandardParameters();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _master?.SendLogMessage(ex.ToString(), LogMessageType.Error);
                 PaintTableParameters();
             }
         }
@@ -2575,7 +2600,7 @@ namespace OsEngine.OsOptimizer
             }
             catch (Exception ex)
             {
-                _master.SendLogMessage(ex.Message.ToString(), LogMessageType.Error);
+                _master?.SendLogMessage(ex.Message.ToString(), LogMessageType.Error);
             }
         }
 
@@ -3021,7 +3046,7 @@ namespace OsEngine.OsOptimizer
             }
             catch (Exception ex)
             {
-                _master.SendLogMessage(ex.ToString(),LogMessageType.Error);
+                _master?.SendLogMessage(ex.ToString(),LogMessageType.Error);
             }
         }
 
@@ -3079,7 +3104,7 @@ namespace OsEngine.OsOptimizer
                 }
                 catch (Exception error)
                 {
-                    _master.SendLogMessage(error.ToString(), LogMessageType.Error);
+                    _master?.SendLogMessage(error.ToString(), LogMessageType.Error);
                 }
             };
         }
@@ -3193,7 +3218,7 @@ namespace OsEngine.OsOptimizer
             }
             catch (Exception error)
             {
-                _master.SendLogMessage(error.ToString(), LogMessageType.Error);
+                _master?.SendLogMessage(error.ToString(), LogMessageType.Error);
             }
 
         }
@@ -3320,7 +3345,7 @@ namespace OsEngine.OsOptimizer
             }
             catch (Exception ex)
             {
-                _master.SendLogMessage(ex.ToString(), LogMessageType.Error);
+                _master?.SendLogMessage(ex.ToString(), LogMessageType.Error);
             }
         }
 
@@ -3504,7 +3529,7 @@ namespace OsEngine.OsOptimizer
             }
             catch(Exception ex)
             {
-                _master.SendLogMessage(ex.ToString(), LogMessageType.Error);
+                _master?.SendLogMessage(ex.ToString(), LogMessageType.Error);
             }
         }
 
@@ -3565,11 +3590,11 @@ namespace OsEngine.OsOptimizer
             {
                 DateTime start = DateTime.Now;
 
-                _master.SendLogMessage(OsLocalization.Optimizer.Message11, LogMessageType.System);
+                _master?.SendLogMessage(OsLocalization.Optimizer.Message11, LogMessageType.System);
 
                 List<string> strategiesInclude = BotFactory.GetNamesStrategyWithParametersSync();
 
-                _master.SendLogMessage(OsLocalization.Optimizer.Message19 + " " + strategiesInclude.Count, LogMessageType.System);
+                _master?.SendLogMessage(OsLocalization.Optimizer.Message19 + " " + strategiesInclude.Count, LogMessageType.System);
 
                 if (string.IsNullOrEmpty(_master.StrategyName))
                 {

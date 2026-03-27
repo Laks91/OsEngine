@@ -488,8 +488,8 @@ namespace OsEngine.Market.Servers.Optimizer
                     security[security.Count - 1].Security.Name = name;
                     security[security.Count - 1].Security.Lot = 1;
                     security[security.Count - 1].Security.NameClass = "TestClass";
-                    security[security.Count - 1].Security.MarginBuy = 1;
-                    security[security.Count - 1].Security.MarginSell = 1;
+                    security[security.Count - 1].Security.MarginBuy = 0;
+                    security[security.Count - 1].Security.MarginSell = 0;
                     security[security.Count - 1].Security.PriceStepCost = 1;
                     security[security.Count - 1].Security.PriceStep = 1;
                     // timeframe / тф
@@ -706,6 +706,7 @@ namespace OsEngine.Market.Servers.Optimizer
                         Candle candle3 = new Candle();
                         candle3.SetCandleFromString(lastString);
                         security[security.Count - 1].TimeEnd = candle3.TimeStart;
+                        security[security.Count - 1].Security.Expiration = candle3.TimeStart;
                         continue;
                     }
                     catch (Exception)
@@ -797,8 +798,8 @@ namespace OsEngine.Market.Servers.Optimizer
                 security[security.Count - 1].Security.Name = name;
                 security[security.Count - 1].Security.Lot = 1;
                 security[security.Count - 1].Security.NameClass = "TestClass";
-                security[security.Count - 1].Security.MarginBuy = 1;
-                security[security.Count - 1].Security.MarginSell = 1;
+                security[security.Count - 1].Security.MarginBuy = 0;
+                security[security.Count - 1].Security.MarginSell = 0;
                 security[security.Count - 1].Security.PriceStepCost = 1;
                 security[security.Count - 1].Security.PriceStep = 1;
                 // timeframe / тф
@@ -937,6 +938,7 @@ namespace OsEngine.Market.Servers.Optimizer
                     Trade trade2 = new Trade();
                     trade2.SetTradeFromString(lastString2);
                     security[security.Count - 1].TimeEnd = trade2.Time;
+                    security[security.Count - 1].Security.Expiration = trade2.Time;
                 }
                 catch (Exception)
                 {
@@ -1024,8 +1026,8 @@ namespace OsEngine.Market.Servers.Optimizer
                 security[security.Count - 1].Security.Name = name;
                 security[security.Count - 1].Security.Lot = 1;
                 security[security.Count - 1].Security.NameClass = "TestClass";
-                security[security.Count - 1].Security.MarginBuy = 1;
-                security[security.Count - 1].Security.MarginSell = 1;
+                security[security.Count - 1].Security.MarginBuy = 0;
+                security[security.Count - 1].Security.MarginSell = 0;
                 security[security.Count - 1].Security.PriceStepCost = 1;
                 security[security.Count - 1].Security.PriceStep = 1;
                 // timeframe / тф

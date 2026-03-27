@@ -84,6 +84,8 @@ namespace OsEngine.Market.Servers
                         _serverRealization.Dispose();
                     }
 
+                    _serverRealization.IsCompletelyDeleted = true;
+
                     //_serverRealization = null;
                 }
             }
@@ -307,9 +309,7 @@ namespace OsEngine.Market.Servers
                 task4.Start();
 
                 Task.Run(() => HighPriorityDataThreadArea());
-
                 Task.Run(() => MediumPriorityDataThreadArea());
-
                 Task.Run(() => LowPriorityDataThreadArea());
 
                 _serverIsCreated = true;
@@ -1093,7 +1093,7 @@ namespace OsEngine.Market.Servers
             SendLogMessage(OsLocalization.Market.Message12, LogMessageType.System);
 
             ServerStatus = ServerConnectStatus.Disconnect;
-            
+
             if (NeedToReconnectEvent != null)
             {
                 NeedToReconnectEvent();
@@ -1191,10 +1191,25 @@ namespace OsEngine.Market.Servers
                         return;
                     }
 
-                    if ((ServerRealization.ServerStatus != ServerConnectStatus.Connect)
-                        && _serverStatusNeed == ServerConnectStatus.Connect &&
+                    if ((ServerRealization.ServerStatus != ServerConnectStatus.Connect
+                        || ServerStatus != ServerConnectStatus.Connect) &&
+                        _serverStatusNeed == ServerConnectStatus.Connect &&
                        LastStartServerTime.AddSeconds(100) < DateTime.Now)
                     {
+                        GetNonTradePeriod();
+
+                        if (_isNonTradingPeriodNow)
+                        {
+                            if (ConnectStatusChangeEvent != null)
+                            {
+                                ConnectStatusChangeEvent(_serverConnectStatus.ToString());
+                            }
+
+                            LastStartServerTime = DateTime.Now;
+                            SendLogMessage(OsLocalization.Market.Message104, LogMessageType.System);
+                            continue;
+                        }
+
                         SendLogMessage(OsLocalization.Market.Message8, LogMessageType.System);
                         ServerRealization.Dispose();
                         _subscribeSecurities.Clear();
@@ -1226,16 +1241,16 @@ namespace OsEngine.Market.Servers
 
                         LastStartServerTime = DateTime.Now;
 
-                        if(NeedToReconnectEvent != null)
+                        if (NeedToReconnectEvent != null)
                         {
                             Thread worker = new Thread(SendReconnectEvent);
                             worker.Start();
                         }
-                       
+
                         continue;
                     }
 
-                    if (ServerRealization.ServerStatus == ServerConnectStatus.Connect 
+                    if (ServerRealization.ServerStatus == ServerConnectStatus.Connect
                         && _serverStatusNeed == ServerConnectStatus.Disconnect)
                     {
                         SendLogMessage(OsLocalization.Market.Message9, LogMessageType.System);
@@ -1330,9 +1345,9 @@ namespace OsEngine.Market.Servers
                     _candleManager = null;
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                SendLogMessage(ex.ToString(),LogMessageType.Error);
+                SendLogMessage(ex.ToString(), LogMessageType.Error);
             }
         }
 
@@ -1345,7 +1360,7 @@ namespace OsEngine.Market.Servers
                     NeedToReconnectEvent();
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 SendLogMessage(ex.ToString(), LogMessageType.Error);
             }
@@ -1457,6 +1472,7 @@ namespace OsEngine.Market.Servers
                         {
                             return;
                         }
+
                         await Task.Delay(1);
                     }
                 }
@@ -1666,6 +1682,7 @@ namespace OsEngine.Market.Servers
                         {
                             return;
                         }
+
                         await Task.Delay(1);
                     }
                 }
@@ -1872,6 +1889,7 @@ namespace OsEngine.Market.Servers
                         {
                             return;
                         }
+
                         await Task.Delay(1);
                     }
                 }
@@ -2121,6 +2139,8 @@ namespace OsEngine.Market.Servers
             ServerRealization.GetSecurities();
         }
 
+        private Dictionary<string, Security> _securitiesDictionary = new Dictionary<string, Security>();
+
         /// <summary>
         /// often used securities. optimizes access to securities
         /// </summary>
@@ -2158,12 +2178,18 @@ namespace OsEngine.Market.Servers
                 }
             }
 
-            for (int i = 0; i < _securities.Count; i++)
+            try
             {
-                if (_securities[i].Name == securityName)
+                Security mySecurity = null;
+
+                if (_securitiesDictionary.TryGetValue(securityName, out mySecurity))
                 {
-                    return _securities[i];
+                    return mySecurity;
                 }
+            }
+            catch
+            {
+                // ignore
             }
 
             return null;
@@ -2248,6 +2274,13 @@ namespace OsEngine.Market.Servers
                         {
                             _securities.Add(securities[i]);
                         }
+
+                        Security mySecurity;
+
+                        if (_securitiesDictionary.TryGetValue(securities[i].Name, out mySecurity) == false)
+                        {
+                            _securitiesDictionary.Add(securities[i].Name, securities[i]);
+                        }
                     }
                     else
                     {
@@ -2321,6 +2354,7 @@ namespace OsEngine.Market.Servers
                     for (int j = 0; j < securities.Count; j++)
                     {
                         if (securities[j].Name == curSaveSec.Name
+                            
                             && securities[j].SecurityType == curSaveSec.SecurityType
                             && securities[j].NameClass == curSaveSec.NameClass)
                         {
@@ -2335,6 +2369,7 @@ namespace OsEngine.Market.Servers
                             securities[j].PriceLimitHigh = curSaveSec.PriceLimitHigh;
                             securities[j].PriceLimitLow = curSaveSec.PriceLimitLow;
                             securities[j].MarginBuy = curSaveSec.MarginBuy;
+                            securities[j].MarginSell = curSaveSec.MarginSell;
                             securities[j].Strike = curSaveSec.Strike;
 
                             break;
@@ -3154,6 +3189,82 @@ namespace OsEngine.Market.Servers
             }
         }
 
+        /// <summary>
+        /// take historical depths .qsh format
+        /// взять исторические стаканы в формате .qsh
+        /// </summary>
+        List<string> IServer.GetQshHistoryFileToSecurity(string securityName, string securityClass, DateTime startTime, DateTime endTime, DateTime actualTime, bool needToUpdete)
+        {
+            try
+            {
+                if (Securities == null)
+                {
+                    return null;
+                }
+
+                if (LastStartServerTime != DateTime.MinValue &&
+                    LastStartServerTime.AddSeconds(5) > DateTime.Now)
+                {
+                    return null;
+                }
+
+                if (actualTime == DateTime.MinValue)
+                {
+                    actualTime = startTime;
+                }
+
+                if (ServerStatus != ServerConnectStatus.Connect)
+                {
+                    return null;
+                }
+
+                Security security = null;
+
+                for (int i = 0; _securities != null && i < _securities.Count; i++)
+                {
+                    if (_securities[i].Name == securityName &&
+                        _securities[i].NameClass == securityClass)
+                    {
+                        security = _securities[i];
+                        break;
+                    }
+                }
+
+                if (security == null)
+                {
+                    for (int i = 0; _securities != null && i < _securities.Count; i++)
+                    {
+                        if (string.IsNullOrEmpty(_securities[i].NameId) == false &&
+                            _securities[i].NameId == securityName)
+                        {
+                            security = _securities[i];
+                            break;
+                        }
+                    }
+                    if (security == null)
+                    {
+                        return null;
+                    }
+                }
+
+                List<string> qshFilesPaths = null;
+
+                lock (_loadDataLocker)
+                {
+                    qshFilesPaths = ServerRealization.GetQshHistoryFileToSecurity(security, startTime, endTime, actualTime);
+                }
+                return qshFilesPaths;
+            }
+            catch (Exception ex)
+            {
+                SendLogMessage(
+                    "AServer. GetQshHistoryFileToSecurity method error: " + ex.ToString(),
+                    LogMessageType.Error);
+
+                return null;
+            }
+        }
+
         #endregion
 
         #region Market depth
@@ -3168,10 +3279,7 @@ namespace OsEngine.Market.Servers
         /// </summary>
         private string _depthsArrayLocker = "depthsLocker";
 
-        /// <summary>
-        /// last bid and ask values by securities
-        /// </summary>
-        private List<BidAskSender> _lastBidAskValues = new List<BidAskSender>();
+        private Dictionary<string, BidAskSender> _lastBidAskValuesDictionary = new Dictionary<string, BidAskSender>();
 
         /// <summary>
         /// new depth event
@@ -3278,48 +3386,26 @@ namespace OsEngine.Market.Servers
                 return;
             }
 
-            Security sec = GetSecurityForName(newMarketDepth.SecurityNameCode, "");
+            BidAskSender newSender = null;
 
-            if (sec == null)
+            if (!_lastBidAskValuesDictionary.TryGetValue(newMarketDepth.SecurityNameCode, out newSender))
             {
-                return;
-            }
+                Security sec = GetSecurityForName(newMarketDepth.SecurityNameCode, "");
 
-            for (int i = 0; i < _lastBidAskValues.Count; i++)
-            {
-                if (_lastBidAskValues[i].Security.Name == sec.Name)
+                if (sec == null)
                 {
-                    if (_lastBidAskValues[i].Bid == bestBid &&
-                        _lastBidAskValues[i].Ask == bestAsk)
-                    {
-                        return;
-                    }
+                    return;
                 }
+
+                newSender = new BidAskSender();
+                newSender.Security = sec;
+                _lastBidAskValuesDictionary.Add(sec.Name, newSender);
             }
 
-            BidAskSender newSender = new BidAskSender();
             newSender.Bid = bestBid;
             newSender.Ask = bestAsk;
-            newSender.Security = sec;
 
             _bidAskToSend.Enqueue(newSender);
-
-            bool isInArray = false;
-
-            for (int i = 0; i < _lastBidAskValues.Count; i++)
-            {
-                if (_lastBidAskValues[i].Security.Name == sec.Name)
-                {
-                    _lastBidAskValues[i] = newSender;
-                    isInArray = true;
-                    break;
-                }
-            }
-
-            if (isInArray == false)
-            {
-                _lastBidAskValues.Add(newSender);
-            }
         }
 
         /// <summary>
@@ -3422,6 +3508,9 @@ namespace OsEngine.Market.Servers
 
                 lock (_newTradesLocker)
                 {
+                    _tradesToSend.Enqueue(trade);
+
+
                     // save / сохраняем
                     if (_allTrades == null)
                     {
@@ -3486,8 +3575,6 @@ namespace OsEngine.Market.Servers
                             _allTrades = allTradesNew;
                         }
                     }
-
-                    _tradesToSend.Enqueue(trade);
                 }
             }
             catch (Exception error)
@@ -3835,7 +3922,7 @@ namespace OsEngine.Market.Servers
                 if (_portfolios == null ||
                     _portfolios.Count == 0)
                 {
-                    SendLogMessage("AServer Error. You can't Execute order when Portfolious is null "
+                    SendLogMessage("AServer Error. You can't Execute order when Portfolio is null "
                        + order.NumberUser, LogMessageType.Error);
                     order.State = OrderStateType.Fail;
                     _ordersToSend.Enqueue(order);
@@ -4586,7 +4673,7 @@ namespace OsEngine.Market.Servers
                         SendMessageConnectorConnectInAnalysisServer();
                     }
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     SendLogMessage(ex.ToString(), LogMessageType.Error);
                     await Task.Delay(5000);
@@ -4699,11 +4786,27 @@ namespace OsEngine.Market.Servers
 
                 if (!_nonTradePeriods.CanTradeThisTime(DateTime.Now))
                 {
-                    _isNonTradingPeriodNow = true;
+                    if (_isNonTradingPeriodNow != true)
+                    {
+                        _isNonTradingPeriodNow = true;
+
+                        if (ConnectStatusChangeEvent != null)
+                        {
+                            ConnectStatusChangeEvent(_serverConnectStatus.ToString());
+                        }
+                    }
                 }
                 else
                 {
-                    _isNonTradingPeriodNow = false;
+                    if (_isNonTradingPeriodNow != false)
+                    {
+                        _isNonTradingPeriodNow = false;
+
+                        if (ConnectStatusChangeEvent != null)
+                        {
+                            ConnectStatusChangeEvent(_serverConnectStatus.ToString());
+                        }
+                    }
                 }
             }
             catch (Exception ex)
@@ -4739,12 +4842,12 @@ namespace OsEngine.Market.Servers
         private ConcurrentQueue<SecurityLeverageData> _queueLeverage = new();
 
         private async void GetListLeverageTask()
-        {            
+        {
             while (true)
             {
                 try
                 {
-                    if(IsDeleted == true)
+                    if (IsDeleted == true)
                     {
                         return;
                     }
@@ -4792,7 +4895,7 @@ namespace OsEngine.Market.Servers
                     SendLogMessage(ex.ToString(), LogMessageType.Error);
                     await Task.Delay(5000);
                 }
-            }            
+            }
         }
 
         private void GetListLeverage()

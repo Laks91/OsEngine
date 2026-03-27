@@ -2446,5 +2446,70 @@ namespace OsEngine.Language
         public string Label636 => OsLocalization.ConvertToLocString(
          "Eng:Single activation mode_" +
          "Ru:Режим одиночной активации_");
+
+        public string Label637 => OsLocalization.ConvertToLocString(
+         "Eng:Are you sure you want to delete the securities listed below? All data will be lost!_" +
+         "Ru:Вы уверены что хотите удалить бумаги перечисленные ниже? Все данные по ним будут утеряны!_");
+
+        public string Label638 => OsLocalization.ConvertToLocString(
+         "Eng:Active >_" +
+         "Ru:Активен >_");
+
+        public string Label639 => OsLocalization.ConvertToLocString(
+         "Eng:Posts collection_" +
+         "Ru:Сборник статей_");
+
+        public string Label640 => OsLocalization.ConvertToLocString(
+         "Eng:Description_" +
+         "Ru:Описание_");
+
+        public string Label641 => OsLocalization.ConvertToLocString(
+         "Eng:Link_" +
+         "Ru:Ссылка_");
+
+        public string Label642 => OsLocalization.ConvertToLocString(
+         "Eng:Open_" +
+         "Ru:Перейти_");
+
+        public string Label643 => OsLocalization.ConvertToLocString(
+         "Eng:Instruction_" +
+         "Ru:Инструкции_");
+
+        public string Label644 => OsLocalization.ConvertToLocString(
+         "Eng:Stop trade by profit_" +
+         "Ru:Стоп-торги после профита_");
+
+        public string Label665 => OsLocalization.ConvertToLocString(
+         "Eng:There are open positions on the grid. They will be lost. Do you want to continue?_" +
+         "Ru:По сетке есть открытые позиции. Они будут утеряны. Вы хотите продолжить?");
+
+        public string Label666 => OsLocalization.ConvertToLocString(
+         "Eng:Error in the settings of non-trading periods_" +
+         "Ru:Ошибка в настройках неторговых периодов");
+
+        public string Label667 => OsLocalization.ConvertToLocString(
+         "Eng:is off_" +
+         "Ru:выключен");
+
+        public string Label668 => OsLocalization.ConvertToLocString(
+         "Eng:Time error_" +
+         "Ru:Ошибка времени");
+
+        public string Label669 => OsLocalization.ConvertToLocString(
+         "Eng:The settings for non-trading periods for the Spot market on the Moscow Exchange will be set. The old settings will be lost! Are you sure?_" +
+         "Ru:Будут установлены настройки неторговых периодов для рынка Спот на Московской бирже. Старые настройки будут утеряны! Вы уверены?");
+
+        public string Label670 => OsLocalization.ConvertToLocString(
+         "Eng:The settings for non-trading periods for the Futures and Options market on the Moscow Exchange will be set. The old settings will be lost! Are you sure?_" +
+         "Ru:Будут установлены настройки неторговых периодов для Срочного(фьючерсы и опционы) рынка на Московской бирже. Старые настройки будут утеряны! Вы уверены?");
+
+        public string Label671 => OsLocalization.ConvertToLocString(
+         "Eng:Reduce orders count on low deposit errors_" +
+         "Ru:Уменьшать кол-во ордеров при нехватке депозита");
+
+        public string Label672 => OsLocalization.ConvertToLocString(
+         "Eng:Current server time_" +
+         "Ru:Текущее время сервера");
+
     }
 }

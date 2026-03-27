@@ -98,6 +98,8 @@ namespace OsEngine.Market.Servers.BinanceData
 
         public event Action ForceCheckOrdersAfterReconnectEvent { add { } remove { } }
 
+        public bool IsCompletelyDeleted { get; set; }
+
         #endregion
 
         #region 2 Properties
@@ -959,7 +961,7 @@ namespace OsEngine.Market.Servers.BinanceData
                 }
                 else
                 {
-                    SendLogMessage($"Сouldn't upload zip archive\n. Http status: {response.StatusCode} - {response.ErrorMessage}", LogMessageType.Error);
+                    SendLogMessage($"Сouldn't upload zip archive\n. You probably need to enable VPN\n Http status: {response.StatusCode} - {response.ErrorMessage}", LogMessageType.Error);
                     return null;
                 }
 

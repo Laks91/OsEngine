@@ -264,9 +264,8 @@ namespace OsEngine.OsOptimizer
                     saveStr.Append(_reports[i].GetSaveString() + "\r\n");
                 }
 
-                StreamWriter writer = new StreamWriter(fileName);
+                using StreamWriter writer = new StreamWriter(fileName);
                 writer.Write(saveStr);
-                writer.Close();
             }
             catch (Exception error)
             {
@@ -966,6 +965,12 @@ namespace OsEngine.OsOptimizer
                 int index = (int)_chartSeriesResult.ChartAreas[0].CursorX.Position;
 
                 index--;
+
+                if(index < 0
+                    || index > _chartSeriesResult.Series[0].Points.Count)
+                {
+                    return;
+                }
 
                 for (int i = 0; i < _chartSeriesResult.Series[0].Points.Count; i++)
                 {

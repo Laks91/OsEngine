@@ -96,7 +96,7 @@ namespace OsEngine.Market.Servers.BitGet.BitGetFutures
 
         public bool DataFeedTfDayCanLoad
         {
-            get { return false; }
+            get { return true; }
         }
 
         public bool DataFeedTfTickCanLoad
@@ -140,7 +140,7 @@ namespace OsEngine.Market.Servers.BitGet.BitGetFutures
                 TimeFrameHour1IsOn = true,
                 TimeFrameHour2IsOn = false,
                 TimeFrameHour4IsOn = true,
-                TimeFrameDayIsOn = false
+                TimeFrameDayIsOn = true
             };
 
         public bool MarketOrdersIsSupport
@@ -332,6 +332,11 @@ namespace OsEngine.Market.Servers.BitGet.BitGetFutures
 
                 return listClasses;
             }
+        }
+
+        public bool CanChangeOrderMarketNumber
+        {
+            get { return false; }
         }
 
         #endregion

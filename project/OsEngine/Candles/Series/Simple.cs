@@ -184,7 +184,6 @@ namespace OsEngine.Candles.Series
             {
                 return;
             }
-
             if (CandlesAll != null
                         && CandlesAll.Count > 0
                         && CandlesAll[CandlesAll.Count - 1] != null
@@ -194,7 +193,7 @@ namespace OsEngine.Candles.Series
                 // если пришли старые данные
                 return;
             }
-
+            
             if (CandlesAll == null ||
                 CandlesAll.Count == 0)
             {

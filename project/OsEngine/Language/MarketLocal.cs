@@ -4,6 +4,8 @@
 */
 
 
+using System.Security.Policy;
+
 namespace OsEngine.Language
 {
     public class MarketLocal
@@ -1266,6 +1268,50 @@ namespace OsEngine.Language
           "Eng:Full logging of user's orders and trades. Records all the statuses of orders and trades that came from the exchange._" +
           "Ru:Полное логирование ордеров и трейдов пользователя. Записывает все статусы ордеров и трейдов, которые пришли с биржи._");
 
+        public string Label310 => OsLocalization.ConvertToLocString(
+          "Eng:The port of the Quik server to connect to. This port is specified in the config.json in the lua folder_" +
+          "Ru:Порт сервера квик, к которому осуществляется подключение. Данный порт прописан в файле config.json в lua папке_");
+
+        public string Label311 => OsLocalization.ConvertToLocString(
+          "Eng:If true, then the portfolio loads only signed securities. If false, the portfolio is loaded for all available securities. Some brokers have instruments with the same name, which may cause the portfolio to load incorrectly. In such cases, the true setting is recommended._" +
+          "Ru:Если true, то позиции по бумагам будут подгружаться только из тех бумаг, на которые подписаны роботы. Если false, то портфель подгружается по всем доступным бумагам. Некоторые брокеры имеют инструменты с одинаковым названием, из за этого портфель может неправильно подгружаться, для таких случаев рекомендуется настройка true_");
+
+        public string Label312 => OsLocalization.ConvertToLocString(
+          "Eng:Account and client code separator in the portfolio. The portfolio consists of a trading account and a client code. A special symbol is used for separation. For the L01-00000F00 account, the separator is a - sign. In this parameter, you need to put a sign other than the one used in the trading account, for example +. The result should be a portfolio L01-00000F00+11111 (11111 is the client's code). If you specify more than one character in the parameter, only the first one will be used._" +
+          "Ru:Разделитель счета и клиентского кода в портфеле. Портфель состоит из торгового счета и клиентского кода. Для разделения используется специальный символ. Для счета L01-00000F00 разделитель знак -. В данном параметре нужно ставить знак отличный от того, что используется в торговом счете, например +. В итоге должен получиться портфель L01-00000F00+11111 (11111 это код клиента). Если прописать в параметре больше одного символа, то будет использоваться только первый._");
+
+        public string Label313 => OsLocalization.ConvertToLocString(
+          "Eng:Important! No trading periods!_" +
+          "Ru:ВАЖНО! Неторговые периоды!_");
+
+        public string Label314 => OsLocalization.ConvertToLocString(
+          "Eng:Are you sure you want to clear the log? Data will be lost!_" +
+          "Ru:Вы уверены что хотите очистить лог? Данные будут потеряны!_");
+
+        public string Label315 => OsLocalization.ConvertToLocString(
+          "Eng:Reconnects the connector with No order. If the Transit server sends an order with the inactive status (the status is not known due to problems with communication with the exchange), then such an order is marked with the None status and is considered lost. Transaq Connector does not have a method for requesting orders, so the only way to request this order is to reconnect the connector._" +
+          "Ru:Переподключает коннектор при None ордере. Если сервер Транзак присылает ордер со статусом inactive (Статус не известен из-за проблем со связью с биржей), то такой ордер помечается статусом None и считается потерянным. У Transaq Connector нет метода для запроса ордеров, поэтому единственный способ запросить данный ордер это переподключение коннектора_");
+       
+        public string Label316 => OsLocalization.ConvertToLocString(
+          "Eng:Expiration_" +
+          "Ru:Экспирация_");
+
+        public string Label317 => OsLocalization.ConvertToLocString(
+          "Eng:Strike_" +
+          "Ru:Страйк_");
+
+        public string Label318 => OsLocalization.ConvertToLocString(
+          "Eng:There are no portfolio numbers in the GetAccountesReques. request. There is an internet error, a sandbox token has been issued, or a new portfolio has been created and you need to wait a few hours._" +
+          "Ru:Нет номеров портфелей в запросе GetAccountesReques. Ошибка интернета, выписан токен песочницы или создан новый портфель и нужно подождать несколько часов._");
+
+        public string Label319 => OsLocalization.ConvertToLocString(
+          "Eng:You do not have permission to trade this instrument. You need to pass tests in your broker's personal account._" +
+          "Ru:У Вас нет разрешения торговать этот инструмент. Нужно проходить тесты в личном кабинете брокера._");
+
+
+
+
+
 
 
         public string LabelCommissionType => OsLocalization.ConvertToLocString(
@@ -1708,6 +1754,14 @@ namespace OsEngine.Language
             "Eng:The program automatically went into reconnect mode. _" +
             "Ru:Программа автоматически перешла в режим повторного подключения. _");
 
+        public string Message103 => OsLocalization.ConvertToLocString(
+            "Eng:One of the sources does not have data connected. Do you want to continue? _" +
+            "Ru:В одном из источников не подключены данные. Вы хотите продолжить? _");
+
+        public string Message104 => OsLocalization.ConvertToLocString(
+            "Eng:Connection during the non-trading period of the connector is interrupted_" +
+            "Ru:Подключение в неторговый период коннектора прервано_");
+
         public string TitleTester => OsLocalization.ConvertToLocString(
             "Eng:Exchange emulator_" +
             "Ru:Эмулятор биржи_");
@@ -1860,6 +1914,18 @@ namespace OsEngine.Language
             "Eng:Full logging of user's orders and trades_" +
             "Ru:Полное логирование ордеров и трейдов пользователя_");
 
+        public string ReconnectingAfterNoneOrder => OsLocalization.ConvertToLocString(
+            "Eng:Reconnecting after a None order_" +
+            "Ru:Переподключение после None ордера_");
+
+        public string PortfolioOnlyBots => OsLocalization.ConvertToLocString(
+            "Eng:Bot only portfolio_" +
+            "Ru:Портфель только из роботов_");
+
+        public string PortfolioSeparator => OsLocalization.ConvertToLocString(
+            "Eng:Portfolio separator_" +
+            "Ru:Разделитель портфеля_");
+
         public string UseSecInfoUpdates => OsLocalization.ConvertToLocString(
             "Eng:Use sec info updates_" +
             "Ru:Включить обновления инструментов_");
@@ -1895,5 +1961,7 @@ namespace OsEngine.Language
         public string LeverageButtonCommit => OsLocalization.ConvertToLocString(
            "Eng:The button opens the leverage settings window for instruments._" +
            "Ru:Кнопка открывает окно настроек плеча по инструментам._");
+
+
     }
 }

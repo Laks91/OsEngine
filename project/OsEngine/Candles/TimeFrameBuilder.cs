@@ -42,7 +42,6 @@ namespace OsEngine.Entity
         }
         // В классе TimeFrameBuilder или его реализации
         public bool SkipWeekendData { get; set; } = true;
-
         public TimeFrameBuilder(StartProgram startProgram)
         {
             _startProgram = startProgram;

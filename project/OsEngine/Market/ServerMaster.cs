@@ -3,6 +3,11 @@
  *Ваши права на использование кода регулируются данной лицензией http://o-s-a.net/doc/license_simple_engine.pdf
 */
 
+/*
+ *Your rights to use the code are governed by this license https://github.com/AlexWan/OsEngine/blob/master/LICENSE
+ *Ваши права на использование кода регулируются данной лицензией http://o-s-a.net/doc/license_simple_engine.pdf
+*/
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -81,10 +86,10 @@ using OsEngine.Market.Servers.OKXData;
 using System.Windows.Controls;
 using OsEngine.Market.Servers.ExMo.ExmoSpot;
 using OsEngine.Market.Servers.BybitData;
-using OsEngine.Market.Servers.Entity;
 using OsEngine.Market.Servers.GateIoData;
 using OsEngine.Market.Servers.BitGetData;
 using OsEngine.Market.Servers.MetaTrader5;
+using OsEngine.Market.Servers.QscalpMarketDepth;
 
 namespace OsEngine.Market
 {
@@ -346,7 +351,7 @@ namespace OsEngine.Market
                 serverTypes.Add(ServerType.BloFinFutures);
                 serverTypes.Add(ServerType.TelegramNews);
                 serverTypes.Add(ServerType.BinanceData);
-                serverTypes.Add(ServerType. AscendexSpot);
+                serverTypes.Add(ServerType.AscendexSpot);
 
                 // а теперь сортируем в зависимости от предпочтений пользователя
 
@@ -420,7 +425,7 @@ namespace OsEngine.Market
 
                 List<string> result = new List<string>();
 
-                for(int i = 0;i < serverTypes.Count;i++)
+                for (int i = 0; i < serverTypes.Count; i++)
                 {
                     result.Add(serverTypes[i].ToString());
                 }
@@ -441,7 +446,7 @@ namespace OsEngine.Market
                 List<ServerType> serverTypes = new List<ServerType>();
 
                 serverTypes.Add(ServerType.TInvest);
-                serverTypes.Add(ServerType.XTSpot); 
+                serverTypes.Add(ServerType.XTSpot);
                 serverTypes.Add(ServerType.XTFutures);
                 serverTypes.Add(ServerType.Deribit);
                 serverTypes.Add(ServerType.KuCoinSpot);
@@ -476,6 +481,7 @@ namespace OsEngine.Market
                 serverTypes.Add(ServerType.GateIoData);
                 serverTypes.Add(ServerType.BitGetData);
                 serverTypes.Add(ServerType.MetaTrader5);
+                serverTypes.Add(ServerType.QscalpMarketDepth);
 
                 return serverTypes;
             }
@@ -538,7 +544,7 @@ namespace OsEngine.Market
                 {
                     string name = _servers[i].ServerNameAndPrefix;
 
-                    if(name.Split('_').Length == 3)
+                    if (name.Split('_').Length == 3)
                     {
                         string shortName = name.Split("_")[0] + "_" + name.Split("_")[1];
                         name = shortName;
@@ -612,6 +618,10 @@ namespace OsEngine.Market
 
                     SaveMostPopularServers(type);
 
+                    if (type == ServerType.QscalpMarketDepth)
+                    {
+                        newServer = new QscalpMarketDepthServer();
+                    }
                     if (type == ServerType.BitGetData)
                     {
                         newServer = new BitGetDataServer();
@@ -864,7 +874,7 @@ namespace OsEngine.Market
 
                     _servers.Add(newServer);
                 }
-               
+
                 if (ServerCreateEvent != null)
                 {
                     try
@@ -1452,12 +1462,12 @@ namespace OsEngine.Market
                 {
                     serverPermission = new MoexFixFastSpotServerPermission();
                 }
-                else if (type == ServerType.XTSpot) 
+                else if (type == ServerType.XTSpot)
                 {
                     serverPermission = new XTSpotServerPermission();
                 }
                 else if (type == ServerType.XTFutures)
-                { 
+                {
                     serverPermission = new XTFuturesServerPermission();
                 }
                 else if (type == ServerType.Transaq)
@@ -1656,6 +1666,10 @@ namespace OsEngine.Market
                 {
                     serverPermission = new BitGetDataServerPermission();
                 }
+                else if (type == ServerType.QscalpMarketDepth)
+                {
+                    serverPermission = new QscalpMarketDepthServerPermission();
+                }
 
                 if (serverPermission != null)
                 {
@@ -1733,14 +1747,14 @@ namespace OsEngine.Market
             }
             catch (Exception ex)
             {
-                SendNewLogMessage(ex.ToString(),LogMessageType.Error);
+                SendNewLogMessage(ex.ToString(), LogMessageType.Error);
                 return null;
             }
         }
 
         public static bool AddNewProxy(
-            bool isOn, string ip, int port, 
-            string login, string password, 
+            bool isOn, string ip, int port,
+            string login, string password,
             string pingWebAddress)
         {
             try
@@ -1770,7 +1784,7 @@ namespace OsEngine.Market
 
                 return true;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 SendNewLogMessage(ex.ToString(), LogMessageType.Error);
             }
@@ -1784,9 +1798,9 @@ namespace OsEngine.Market
                 int proxiesCount = _proxyMaster.Proxies.Count;
 
                 _proxyMaster.RemoveProxy(number);
-                
 
-                if(proxiesCount != _proxyMaster.Proxies.Count)
+
+                if (proxiesCount != _proxyMaster.Proxies.Count)
                 {
                     return true;
                 }
@@ -1804,9 +1818,9 @@ namespace OsEngine.Market
             {
                 List<ProxyOsa> proxies = _proxyMaster.Proxies;
 
-                for(int i = 0;i < proxies.Count;i++)
+                for (int i = 0; i < proxies.Count; i++)
                 {
-                    if(proxies[i].Number == number)
+                    if (proxies[i].Number == number)
                     {
                         return proxies[i];
                     }
@@ -1837,7 +1851,7 @@ namespace OsEngine.Market
                     }
                 }
 
-                if(proxy != null)
+                if (proxy != null)
                 {
                     _proxyMaster.PingProxy(proxy);
                     return proxy;
@@ -1893,9 +1907,9 @@ namespace OsEngine.Market
         /// <summary>
         /// add items on which portfolios and orders will be drawn
         /// </summary>
-        public static void SetHostTable(WindowsFormsHost hostPortfolio, 
-            WindowsFormsHost hostActiveOrders, 
-            WindowsFormsHost hostHistoricalOrders, 
+        public static void SetHostTable(WindowsFormsHost hostPortfolio,
+            WindowsFormsHost hostActiveOrders,
+            WindowsFormsHost hostHistoricalOrders,
             StartUiToPainter startUi,
             ComboBox comboBoxActiveOrders,
             Button buttonLeftActiveOrders,
@@ -1918,8 +1932,8 @@ namespace OsEngine.Market
                 _ordersStorage = new ServerMasterOrdersPainter();
                 _ordersStorage.LogMessageEvent += SendNewLogMessage;
                 _ordersStorage.SetHostTable(hostActiveOrders, hostHistoricalOrders, startUi,
-                comboBoxActiveOrders,buttonLeftActiveOrders,buttonRightActiveOrders,
-                comboBoxHistoryOrders,buttonLeftHistoryOrders, buttonRightHistoryOrders);
+                comboBoxActiveOrders, buttonLeftActiveOrders, buttonRightActiveOrders,
+                comboBoxHistoryOrders, buttonLeftHistoryOrders, buttonRightHistoryOrders);
                 _ordersStorage.RevokeOrderToEmulatorEvent += _ordersStorage_RevokeOrderToEmulatorEvent;
             }
         }
@@ -1946,7 +1960,7 @@ namespace OsEngine.Market
             }
             catch (Exception ex)
             {
-                SendNewLogMessage(ex.ToString(),LogMessageType.Error);
+                SendNewLogMessage(ex.ToString(), LogMessageType.Error);
             }
         }
 
@@ -2004,7 +2018,7 @@ namespace OsEngine.Market
 
         public static void ShowApiDialog()
         {
-            if(ShowApiDialogEvent != null)
+            if (ShowApiDialogEvent != null)
             {
                 ShowApiDialogEvent();
             }
@@ -2030,7 +2044,7 @@ namespace OsEngine.Market
         {
             try
             {
-                if(OsTraderMaster.Master == null)
+                if (OsTraderMaster.Master == null)
                 {
                     return null;
                 }
@@ -2294,12 +2308,12 @@ namespace OsEngine.Market
         /// <summary>
         /// XT Spot exchange
         /// </summary>
-        XTSpot, 
+        XTSpot,
 
-            /// <summary>
-            /// XT Futures exchange
-            /// </summary>
-        XTFutures, 
+        /// <summary>
+        /// XT Futures exchange
+        /// </summary>
+        XTFutures,
 
         /// <summary>
         /// Pionex exchange
@@ -2458,6 +2472,12 @@ namespace OsEngine.Market
         /// downloading historical data from exchange BitGet
         /// скачивание исторических данных с биржи BitGet
         /// </summary>
-        BitGetData
+        BitGetData,
+
+        /// <summary>
+        /// downloading historical depths
+        /// скачивание историческихстаканов в формате qsh
+        /// </summary>
+        QscalpMarketDepth
     }
 }

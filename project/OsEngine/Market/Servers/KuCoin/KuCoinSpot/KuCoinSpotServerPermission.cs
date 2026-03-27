@@ -243,7 +243,7 @@ namespace OsEngine.Market.Servers.KuCoin.KuCoinSpot
 
         public bool IsSupports_ProxyFor_MultipleInstances
         {
-            get { return false; }
+            get { return true; }
         }
 
         public bool IsSupports_AsyncOrderSending
@@ -290,6 +290,11 @@ namespace OsEngine.Market.Servers.KuCoin.KuCoinSpot
         }
 
         public string[] Leverage_SupportClasses { get; }
+
+        public bool CanChangeOrderMarketNumber
+        {
+            get { return false; }
+        }
 
         #endregion
     }

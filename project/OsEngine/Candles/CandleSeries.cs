@@ -148,11 +148,11 @@ namespace OsEngine.Entity
             }
             set
             {
-                if(TimeFrameBuilder.CandleSeriesRealization == null)
+                if (TimeFrameBuilder.CandleSeriesRealization == null)
                 {
                     return;
                 }
-                
+
                 TimeFrameBuilder.CandleSeriesRealization.CandlesAll = value;
             }
         }
@@ -338,7 +338,7 @@ namespace OsEngine.Entity
                 return;
             }
 
-            if (CandlesAll == null 
+            if (CandlesAll == null
                 || CandlesAll.Count == 0)
             {
                 return;
@@ -355,7 +355,7 @@ namespace OsEngine.Entity
             }
 
             Candle lastCandle = null;
-            
+
             try
             {
                 lastCandle = CandlesAll[CandlesAll.Count - 1];
@@ -364,7 +364,7 @@ namespace OsEngine.Entity
             {
                 return;
             }
-            
+
 
             if (lastCandle == null
                 || lastCandle.State == CandleState.Finished)
@@ -499,11 +499,11 @@ namespace OsEngine.Entity
             {
                 decimal spread = ask - bid;
 
-                if(spread > 0)
+                if (spread > 0)
                 {
                     decimal spreadPercent = spread / (bid / 100);
-                    
-                    if(spreadPercent > TimeFrameBuilder.MarketDepthBuildMaxSpread)
+
+                    if (spreadPercent > TimeFrameBuilder.MarketDepthBuildMaxSpread)
                     {
                         return;
                     }
@@ -533,8 +533,8 @@ namespace OsEngine.Entity
 
         private void UpdateChangeCandle()
         {
-            if ((_startProgram == StartProgram.IsTester 
-                || _startProgram == StartProgram.IsOsOptimizer) 
+            if ((_startProgram == StartProgram.IsTester
+                || _startProgram == StartProgram.IsOsOptimizer)
                 &&
                 (TypeTesterData == TesterDataType.MarketDepthOnlyReadyCandle ||
                 TypeTesterData == TesterDataType.TickOnlyReadyCandle))

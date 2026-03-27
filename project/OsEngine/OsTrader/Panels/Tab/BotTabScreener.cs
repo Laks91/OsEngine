@@ -653,6 +653,17 @@ namespace OsEngine.OsTrader.Panels.Tab
                 _ui.Close();
             }
 
+            if(_chartEngines != null
+                && _chartEngines.Count > 0)
+            {
+                BotPanel[] panelsToPaint = _chartEngines.ToArray();
+
+                for (int i = 0; i < panelsToPaint.Length; i++)
+                {
+                    panelsToPaint[i].CloseGui();
+                }
+            }
+
             for (int i = 0; Tabs != null && i < Tabs.Count; i++)
             {
                 Tabs[i].Clear();
@@ -1130,6 +1141,7 @@ namespace OsEngine.OsTrader.Panels.Tab
 
             if (haveNewSettings)
             {
+                tab.Connector.Save();
                 tab.Connector.ReconnectHard();
             }
         }
@@ -1430,13 +1442,20 @@ namespace OsEngine.OsTrader.Panels.Tab
 
                 bot.ChartClosedEvent += (string nameBot) =>
                 {
-                    for (int i = 0; i < _chartEngines.Count; i++)
+                    try
                     {
-                        if (_chartEngines[i].NameStrategyUniq == nameBot)
+                        for (int i = 0; i < _chartEngines.Count; i++)
                         {
-                            _chartEngines.RemoveAt(i);
-                            break;
+                            if (_chartEngines[i].NameStrategyUniq == nameBot)
+                            {
+                                _chartEngines.RemoveAt(i);
+                                break;
+                            }
                         }
+                    }
+                    catch(Exception ex)
+                    {
+                        SendNewLogMessage(ex.ToString(), LogMessageType.Error);
                     }
                 };
 
@@ -2146,6 +2165,12 @@ namespace OsEngine.OsTrader.Panels.Tab
                 }
 
                 newIndicator = (Aindicator)Tabs[i].CreateCandleIndicator(newIndicator, ind.NameArea);
+
+                if(newIndicator == null)
+                {
+                    continue;
+                }
+
                 newIndicator.CanDelete = ind.CanDelete;
                 newIndicator.Save();
             }
